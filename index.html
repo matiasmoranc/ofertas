@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Mercado Élite 5</title>
-
+<title>Mercado Élite 5 - Multiplayer</title>
 <style>
 *{
   box-sizing:border-box;
@@ -582,327 +580,209 @@ header p{
   }
 
 }
+
+
+/* =========================
+   MULTIPLAYER / LOBBY
+========================= */
+.screen-hidden{display:none !important;}
+.lobby-wrap{
+  width:min(560px,100%);
+  margin:25px auto;
+}
+.lobby-card{
+  background:rgba(7,20,14,.96);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.42);
+}
+.lobby-card h2{margin:0 0 8px;font-size:26px;}
+.lobby-card p{color:#9fb0a6;line-height:1.45;margin:0 0 18px;}
+.lobby-separator{
+  display:flex;align-items:center;gap:10px;margin:18px 0;color:#718278;font-size:11px;font-weight:900;
+}
+.lobby-separator:before,.lobby-separator:after{content:"";height:1px;background:rgba(255,255,255,.10);flex:1;}
+.room-input{
+  width:100%;padding:14px 15px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.3);color:white;text-transform:uppercase;text-align:center;font-size:22px;
+  font-weight:900;letter-spacing:4px;outline:none;
+}
+.lobby-button{
+  width:100%;margin-top:10px;padding:15px;border:0;border-radius:14px;font-weight:900;font-size:15px;
+  background:#baff42;color:#07100b;cursor:pointer;
+}
+.lobby-button.secondary{background:#1d5b8f;color:white;}
+.lobby-button.ghost{background:rgba(255,255,255,.08);color:white;}
+.lobby-button:disabled{opacity:.35;cursor:not-allowed;}
+.firebase-status{
+  margin-bottom:14px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06);
+  color:#a8b7ad;font-size:12px;line-height:1.4;
+}
+.firebase-status.ok{color:#baff42;background:rgba(100,180,50,.12);}
+.firebase-status.error{color:#ff9b9b;background:rgba(180,40,40,.15);}
+.room-ready{
+  margin-top:18px;padding:16px;border-radius:15px;background:rgba(0,0,0,.28);text-align:center;
+}
+.room-code-big{font-size:34px;font-weight:900;letter-spacing:6px;color:#ffd454;margin:7px 0;}
+.connection-bar{
+  max-width:800px;margin:0 auto 14px;padding:10px 14px;border-radius:14px;background:rgba(0,0,0,.3);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;color:#a8b7ad;
+}
+.connection-bar strong{color:white;}
+.connection-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7a7a7a;margin-right:6px;}
+.connection-dot.online{background:#aaff38;box-shadow:0 0 10px rgba(170,255,56,.5);}
+.waiting-overlay{
+  margin:20px auto;max-width:520px;padding:18px;border-radius:16px;background:rgba(0,0,0,.28);text-align:center;color:#c1cec6;
+}
+.action-locked{opacity:.45;pointer-events:none;}
+.my-team-pill{
+  padding:6px 10px;border-radius:999px;font-weight:900;color:white;
+}
+.my-team-pill.a{background:#0d5fa8;}
+.my-team-pill.b{background:#a51f32;}
+
+@media(max-width:500px){
+  .lobby-card{padding:16px;}
+  .connection-bar{flex-direction:column;align-items:flex-start;}
+}
 </style>
 </head>
-
 <body>
-
 <div class="app">
-
 <header>
-
-  <div class="ball">
-    ⚽
-  </div>
-
-  <h1>
-    MERCADO ÉLITE 5
-  </h1>
-
-  <p>
-    Subastá · Armá tu equipo · Jugá el partido
-  </p>
-
-  <div id="phaseBadge" class="phase-badge">
-    🧤 FASE DE ARQUEROS
-  </div>
-
+  <div class="ball">⚽</div>
+  <h1>MERCADO ÉLITE 5</h1>
+  <p>Subastá · Armá tu equipo · Jugá contra otro celular</p>
 </header>
 
-
-<div class="game">
-
-<section class="team-card">
-
-  <div class="team-header">
-
-    <div>
-      <small>JUGADOR</small>
-      <h2>🔵 EQUIPO A</h2>
+<section id="lobbyScreen" class="lobby-wrap">
+  <div class="lobby-card">
+    <h2>🎮 Partida online</h2>
+    <p>Uno crea la sala y queda como Equipo A. El otro ingresa el código y queda como Equipo B.</p>
+    <div id="firebaseStatus" class="firebase-status">Comprobando Firebase...</div>
+    <button id="createRoomButton" class="lobby-button" type="button">CREAR PARTIDA</button>
+    <div class="lobby-separator">O UNIRSE</div>
+    <input id="roomCodeInput" class="room-input" maxlength="6" autocomplete="off" placeholder="ABC123">
+    <button id="joinRoomButton" class="lobby-button secondary" type="button">UNIRSE A PARTIDA</button>
+    <div id="lobbyMessage" class="message">Conectando...</div>
+    <div id="roomReady" class="room-ready screen-hidden">
+      <div>Código de la partida</div>
+      <div id="roomCodeBig" class="room-code-big">------</div>
+      <button id="copyRoomButton" class="lobby-button ghost" type="button">COPIAR CÓDIGO</button>
+      <div id="waitingText" style="margin-top:12px;color:#9fb0a6;font-size:12px;">Esperando al rival...</div>
     </div>
-
-    <div class="budget">
-      <small>PRESUPUESTO</small>
-      <strong id="moneyA">
-        €20
-      </strong>
-    </div>
-
   </div>
-
-  <div id="teamA" class="squad"></div>
-
 </section>
 
-
-<main class="auction-card">
-
-  <div class="turn-row">
-
-    <div
-      class="turn-money team-a-money"
-      onclick="toggleMiniTeam('A')"
-    >
-
-      <span>
-        🔵 EQUIPO A
-      </span>
-
-      <strong id="turnMoneyA">
-        €20
-      </strong>
-
-      <small>
-        Ver equipo
-      </small>
-
-    </div>
-
-
-    <div id="turnBadge" class="turn-badge">
-      TURNO A
-    </div>
-
-
-    <div
-      class="turn-money team-b-money"
-      onclick="toggleMiniTeam('B')"
-    >
-
-      <span>
-        EQUIPO B 🔴
-      </span>
-
-      <strong id="turnMoneyB">
-        €20
-      </strong>
-
-      <small>
-        Ver equipo
-      </small>
-
-    </div>
-
+<section id="gameScreen" class="screen-hidden">
+  <div class="connection-bar">
+    <div><span id="connectionDot" class="connection-dot"></span><span id="connectionText">Conectando...</span></div>
+    <div>Sala <strong id="gameRoomCode">------</strong></div>
+    <div id="myTeamPill" class="my-team-pill">Equipo ?</div>
   </div>
 
-
-  <div
-    id="miniTeam"
-    class="mini-team hidden"
-  >
-
-    <div class="mini-team-header">
-
-      <strong id="miniTeamTitle">
-        EQUIPO
-      </strong>
-
-      <button onclick="closeMiniTeam()">
-        ✕
-      </button>
-
-    </div>
-
-    <div id="miniTeamPlayers"></div>
-
+  <div style="text-align:center;margin-bottom:14px;">
+    <div id="phaseBadge" class="phase-badge">🧤 FASE DE ARQUEROS</div>
   </div>
 
+  <div class="game">
+    <section class="team-card">
+      <div class="team-header">
+        <div><small>JUGADOR</small><h2>🔵 EQUIPO A</h2></div>
+        <div class="budget"><small>PRESUPUESTO</small><strong id="moneyA">€20</strong></div>
+      </div>
+      <div id="teamA" class="squad"></div>
+    </section>
 
-  <div class="market-label">
-    JUGADOR EN EL MERCADO
+    <main class="auction-card">
+      <div class="turn-row">
+        <div class="turn-money team-a-money" id="teamAMoneyCard"><span>🔵 EQUIPO A</span><strong id="turnMoneyA">€20</strong><small>Ver equipo</small></div>
+        <div id="turnBadge" class="turn-badge">TURNO A</div>
+        <div class="turn-money team-b-money" id="teamBMoneyCard"><span>EQUIPO B 🔴</span><strong id="turnMoneyB">€20</strong><small>Ver equipo</small></div>
+      </div>
+
+      <div id="miniTeam" class="mini-team hidden">
+        <div class="mini-team-header"><strong id="miniTeamTitle">EQUIPO</strong><button id="closeMiniTeamButton" type="button">✕</button></div>
+        <div id="miniTeamPlayers"></div>
+      </div>
+
+      <div class="market-label">JUGADOR EN EL MERCADO</div>
+      <div class="player-card">
+        <div id="positionCircle" class="position-circle">⚽</div>
+        <h2 id="playerName">ESPERANDO...</h2>
+        <div id="playerPosition" class="player-position"></div>
+      </div>
+
+      <div class="current-bid">
+        <small>OFERTA ACTUAL</small>
+        <div id="currentBid">€0</div>
+        <div id="bidLeader">Sin ofertas</div>
+      </div>
+
+      <div id="bidControls" class="bid-controls">
+        <button id="bidMinus" type="button">−</button>
+        <div class="bid-value">€<span id="bidValue">1</span></div>
+        <button id="bidPlus" type="button">+</button>
+      </div>
+
+      <button id="offerButton" class="main-button" type="button">OFERTAR €1</button>
+      <button id="passButton" class="pass-button" type="button">PASAR</button>
+      <div id="message" class="message">Esperando al rival...</div>
+      <button id="playButton" class="play-button hidden" type="button">🏆 JUGAR PARTIDO</button>
+    </main>
+
+    <section class="team-card">
+      <div class="team-header">
+        <div><small>JUGADOR</small><h2>🔴 EQUIPO B</h2></div>
+        <div class="budget"><small>PRESUPUESTO</small><strong id="moneyB">€20</strong></div>
+      </div>
+      <div id="teamB" class="squad"></div>
+    </section>
   </div>
 
-
-  <div class="player-card">
-
-    <div
-      id="positionCircle"
-      class="position-circle"
-    >
-      ⚽
+  <section id="resultCard" class="result-card hidden">
+    <div class="result-title">RESULTADO</div>
+    <div id="score" class="score">0 - 0</div>
+    <div id="winnerText" class="winner-text"></div>
+    <div class="stats-grid">
+      <div class="stat-box"><span>ATAQUE</span><strong id="attackStats"></strong></div>
+      <div class="stat-box"><span>MEDIOCAMPO</span><strong id="midStats"></strong></div>
+      <div class="stat-box"><span>DEFENSA</span><strong id="defStats"></strong></div>
+      <div class="stat-box"><span>ARQUERO</span><strong id="gkStats"></strong></div>
     </div>
+    <div id="probabilityText" class="probability"></div>
+    <div id="analysisText" class="analysis"></div>
+  </section>
 
-    <h2 id="playerName">
-      CARGANDO...
-    </h2>
-
-    <div
-      id="playerPosition"
-      class="player-position"
-    ></div>
-
-  </div>
-
-
-  <div class="current-bid">
-
-    <small>
-      OFERTA ACTUAL
-    </small>
-
-    <div id="currentBid">
-      €0
-    </div>
-
-    <div id="bidLeader">
-      Sin ofertas
-    </div>
-
-  </div>
-
-
-  <div class="bid-controls">
-
-    <button onclick="changeBid(-1)">
-      −
-    </button>
-
-    <div class="bid-value">
-      €<span id="bidValue">1</span>
-    </div>
-
-    <button onclick="changeBid(1)">
-      +
-    </button>
-
-  </div>
-
-
-  <button
-    id="offerButton"
-    class="main-button"
-    onclick="makeBid()"
-  >
-    OFERTAR €1
-  </button>
-
-
-  <button
-    id="passButton"
-    class="pass-button"
-    onclick="passBid()"
-  >
-    PASAR
-  </button>
-
-
-  <div
-    id="message"
-    class="message"
-  >
-    Preparando mercado...
-  </div>
-
-
-  <button
-    id="playButton"
-    class="play-button hidden"
-    onclick="playMatch()"
-  >
-    🏆 JUGAR PARTIDO
-  </button>
-
-</main>
-
-
-<section class="team-card">
-
-  <div class="team-header">
-
-    <div>
-      <small>JUGADOR</small>
-      <h2>🔴 EQUIPO B</h2>
-    </div>
-
-    <div class="budget">
-      <small>PRESUPUESTO</small>
-      <strong id="moneyB">
-        €20
-      </strong>
-    </div>
-
-  </div>
-
-  <div id="teamB" class="squad"></div>
-
+  <button id="resetButton" class="reset-button" type="button">Reiniciar partida</button>
+  <button id="leaveRoomButton" class="reset-button" type="button" style="background:rgba(255,255,255,.08);color:white;margin-top:-12px;">Salir de la sala</button>
 </section>
-
 </div>
 
-
-<section
-  id="resultCard"
-  class="result-card hidden"
->
-
-  <div class="result-title">
-    RESULTADO
-  </div>
-
-  <div
-    id="score"
-    class="score"
-  >
-    0 - 0
-  </div>
-
-  <div
-    id="winnerText"
-    class="winner-text"
-  ></div>
-
-  <div class="stats-grid">
-
-    <div class="stat-box">
-      <span>ATAQUE</span>
-      <strong id="attackStats"></strong>
-    </div>
-
-    <div class="stat-box">
-      <span>MEDIOCAMPO</span>
-      <strong id="midStats"></strong>
-    </div>
-
-    <div class="stat-box">
-      <span>DEFENSA</span>
-      <strong id="defStats"></strong>
-    </div>
-
-    <div class="stat-box">
-      <span>ARQUERO</span>
-      <strong id="gkStats"></strong>
-    </div>
-
-  </div>
-
-  <div
-    id="probabilityText"
-    class="probability"
-  ></div>
-
-  <div
-    id="analysisText"
-    class="analysis"
-  ></div>
-
-</section>
-
-
-<button
-  class="reset-button"
-  onclick="resetGame()"
->
-  Reiniciar partida
-</button>
-
-</div>
-
-
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+import { getDatabase, ref, get, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 /* =================================================
-   JUGADORES
-================================================= */
+   1) PEGÁ ACÁ TU CONFIGURACIÓN DE FIREBASE
+   =================================================
+   La vas a copiar desde:
+   Firebase Console > Configuración del proyecto > Tus apps > Web
+*/
+
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBqBdyA1dm__wy5jtUXEVJP2s7D1f1WxOw",
+  authDomain: "ofertas-b290c.firebaseapp.com",
+  databaseURL: "https://ofertas-b290c-default-rtdb.firebaseio.com",
+  projectId: "ofertas-b290c",
+  storageBucket: "ofertas-b290c.firebasestorage.app",
+  messagingSenderId: "905121322121",
+  appId: "1:905121322121:web:7533d59396e19a85c2a258"
+};
 
 const players = [
 
@@ -1000,2513 +880,688 @@ const players = [
 
 ];
 
+const $ = id => document.getElementById(id);
+const lobbyScreen = $("lobbyScreen");
+const gameScreen = $("gameScreen");
+const lobbyMessage = $("lobbyMessage");
+const firebaseStatus = $("firebaseStatus");
 
-/* =================================================
-   ESTADO
-================================================= */
+let app = null;
+let auth = null;
+let db = null;
+let uid = null;
+let roomCode = null;
+let myTeam = null;
+let gameState = null;
+let unsubscribeGame = null;
+let selectedBid = 1;
+let openedMiniTeam = null;
+let lastAuctionKey = "";
 
-let money={
-  A:20,
-  B:20
-};
-
-let teams={
-  A:[],
-  B:[]
-};
-
-let usedPlayers=[];
-
-let currentPlayer=null;
-
-let firstBidder="A";
-
-let currentBidder="A";
-
-let leader=null;
-
-let currentBid=0;
-
-let selectedBid=1;
-
-let auctionActive=false;
-
-let zeroBidPasses=0;
-
-let forceOpeningBid=false;
-
-let openedMiniTeam=null;
-
-let ratingsRevealed=false;
-
-let goalkeeperPhase=true;
-
-
-/* =================================================
-   UTILIDADES
-================================================= */
-
-function otherPlayer(player){
-  return player==="A" ? "B" : "A";
-}
-
-function teamIsFull(team){
-  return teams[team].length>=5;
-}
-
-function hasGoalkeeper(team){
-
-  return teams[team].some(
-    player=>player.pos==="GP"
+function firebaseConfigured(){
+  return Boolean(
+    firebaseConfig.apiKey &&
+    !firebaseConfig.apiKey.startsWith("PEGAR_") &&
+    firebaseConfig.databaseURL &&
+    !firebaseConfig.databaseURL.startsWith("PEGAR_")
   );
-
 }
 
-function goalkeeperPhaseComplete(){
-
-  return (
-    hasGoalkeeper("A") &&
-    hasGoalkeeper("B")
-  );
-
+function setLobbyMessage(text, isError=false){
+  lobbyMessage.textContent = text;
+  lobbyMessage.style.color = isError ? "#ff9b9b" : "#bdc9c1";
 }
 
-function bothTeamsBroke(){
-
-  return (
-    money.A===0 &&
-    money.B===0 &&
-    !teamIsFull("A") &&
-    !teamIsFull("B")
-  );
-
+function normalizeCode(value){
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 6);
 }
 
-function teamWithoutMoney(){
+function generateRoomCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for(let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
 
-  const aBroke=
-    money.A===0 &&
-    !teamIsFull("A");
-
-  const bBroke=
-    money.B===0 &&
-    !teamIsFull("B");
-
-  if(aBroke && !bBroke){
-    return "A";
-  }
-
-  if(bBroke && !aBroke){
-    return "B";
-  }
-
+function otherPlayer(team){ return team === "A" ? "B" : "A"; }
+function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
+function playerByIndex(index){ return Number.isInteger(index) ? players[index] : null; }
+function teamEntries(state, team){ return Array.isArray(state?.teams?.[team]) ? state.teams[team] : []; }
+function teamIsFullState(state, team){ return teamEntries(state,team).length >= 5; }
+function hasGoalkeeperState(state, team){ return teamEntries(state,team).some(entry => playerByIndex(entry.playerIndex)?.pos === "GP"); }
+function goalkeeperPhaseCompleteState(state){ return hasGoalkeeperState(state,"A") && hasGoalkeeperState(state,"B"); }
+function bothTeamsBrokeState(state){
+  return state.money.A===0 && state.money.B===0 && !teamIsFullState(state,"A") && !teamIsFullState(state,"B");
+}
+function teamWithoutMoneyState(state){
+  const a = state.money.A===0 && !teamIsFullState(state,"A");
+  const b = state.money.B===0 && !teamIsFullState(state,"B");
+  if(a && !b) return "A";
+  if(b && !a) return "B";
   return null;
-
 }
-
-function clamp(value,min,max){
-
-  return Math.max(
-    min,
-    Math.min(
-      max,
-      value
-    )
-  );
-
-}
-
-function showMessage(text){
-
-  document.getElementById(
-    "message"
-  ).textContent=text;
-
-}
-
 function getPositionName(pos){
+  return {GP:"GUARDAMETA",DF:"DEFENSA",MD:"MEDIOCAMPISTA",DL:"DELANTERO"}[pos] || "";
+}
 
+/* PRNG determinista: evita que cada teléfono elija un jugador distinto. */
+function nextSeed(seed){ return (Math.imul((seed>>>0),1664525)+1013904223)>>>0; }
+function chooseFromState(state, list){
+  state.rngSeed = nextSeed(state.rngSeed || 123456789);
+  return list[state.rngSeed % list.length];
+}
+
+function freshGameState(code, playerAUid, playerBUid=null, seed=(Date.now()>>>0)){
   return {
-    GP:"GUARDAMETA",
-    DF:"DEFENSA",
-    MD:"MEDIOCAMPISTA",
-    DL:"DELANTERO"
-  }[pos];
-
-}
-
-
-/* =================================================
-   FONDO
-================================================= */
-
-function updateBackground(){
-
-  document.body.classList.remove(
-    "turn-a",
-    "turn-b"
-  );
-
-  const turn=
-    auctionActive
-      ? currentBidder
-      : firstBidder;
-
-  document.body.classList.add(
-    turn==="A"
-      ? "turn-a"
-      : "turn-b"
-  );
-
-}
-
-
-/* =================================================
-   EQUIPOS
-================================================= */
-
-function renderTeam(team){
-
-  const container=
-    document.getElementById(
-      "team"+team
-    );
-
-  container.innerHTML="";
-
-  for(
-    let i=0;
-    i<5;
-    i++
-  ){
-
-    const slot=
-      document.createElement(
-        "div"
-      );
-
-    slot.className=
-      "player-slot";
-
-    const player=
-      teams[team][i];
-
-    if(player){
-
-      const details=
-        ratingsRevealed
-
-          ? `Media ${player.rating} · €${player.price}`
-
-          : `Comprado por €${player.price}`;
-
-      slot.innerHTML=`
-
-        <div class="slot-position">
-          ${player.pos}
-        </div>
-
-        <div class="slot-info">
-
-          <div class="slot-name">
-            ${player.name}
-          </div>
-
-          <div class="slot-rating">
-            ${details}
-          </div>
-
-        </div>
-
-      `;
-
-    }
-    else{
-
-      slot.innerHTML=`
-
-        <div class="slot-position">
-          —
-        </div>
-
-        <div class="slot-info">
-
-          <div class="slot-name empty">
-            Vacante
-          </div>
-
-        </div>
-
-      `;
-
-    }
-
-    container.appendChild(
-      slot
-    );
-
-  }
-
-}
-
-
-/* =================================================
-   PANTALLA
-================================================= */
-
-function updateScreen(){
-
-  document.getElementById(
-    "moneyA"
-  ).textContent=
-    "€"+money.A;
-
-  document.getElementById(
-    "moneyB"
-  ).textContent=
-    "€"+money.B;
-
-  document.getElementById(
-    "turnMoneyA"
-  ).textContent=
-    "€"+money.A;
-
-  document.getElementById(
-    "turnMoneyB"
-  ).textContent=
-    "€"+money.B;
-
-  renderTeam("A");
-  renderTeam("B");
-
-  document.getElementById(
-    "bidValue"
-  ).textContent=
-    selectedBid;
-
-  document.getElementById(
-    "currentBid"
-  ).textContent=
-    "€"+currentBid;
-
-  if(leader){
-
-    document.getElementById(
-      "bidLeader"
-    ).textContent=
-      "Equipo "+
-      leader+
-      " tiene la mejor oferta";
-
-  }
-  else{
-
-    document.getElementById(
-      "bidLeader"
-    ).textContent=
-      "Sin ofertas";
-
-  }
-
-const turnBadge =
-  document.getElementById(
-    "turnBadge"
-  );
-
-turnBadge.classList.remove(
-  "turn-a-badge",
-  "turn-b-badge"
-);
-
-if(currentBidder === "A"){
-
-  turnBadge.classList.add(
-    "turn-a-badge"
-  );
-
-  turnBadge.innerHTML =
-    "🔵 TURNO DE OFERTAR: A";
-
-}else{
-
-  turnBadge.classList.add(
-    "turn-b-badge"
-  );
-
-  turnBadge.innerHTML =
-    "🔴 TURNO DE OFERTAR: B";
-
-}
-
-
-  const phaseBadge=
-    document.getElementById(
-      "phaseBadge"
-    );
-
-  phaseBadge.textContent=
-    goalkeeperPhase
-      ? "🧤 FASE DE ARQUEROS"
-      : "⚽ MERCADO GENERAL";
-
-
-  const passButton=
-    document.getElementById(
-      "passButton"
-    );
-
-  const offerButton=
-    document.getElementById(
-      "offerButton"
-    );
-
-
-  /*
-    SI LOS DOS ESTÁN EN €0
-  */
-
-  if(
-    bothTeamsBroke() &&
-    auctionActive
-  ){
-
-    offerButton.disabled=true;
-
-    offerButton.textContent=
-      "SIN DINERO";
-
-    passButton.disabled=false;
-
-    passButton.textContent=
-      "PASAR";
-
-  }
-
-  else{
-
-    const broke=
-      teamWithoutMoney();
-
-    if(
-      broke &&
-      currentBidder!==broke &&
-      currentBid===0 &&
-      !leader
-    ){
-
-      passButton.disabled=false;
-
-      passButton.textContent=
-        "PASAR";
-
-    }
-
-    else if(
-      auctionActive &&
-      forceOpeningBid &&
-      !leader &&
-      currentBid===0
-    ){
-
-      passButton.disabled=true;
-
-      passButton.textContent=
-        "DEBÉS OFERTAR €1";
-
-    }
-
-    else{
-
-      passButton.disabled=false;
-
-      passButton.textContent=
-        "PASAR";
-
-    }
-
-
-    if(
-      money[currentBidder]<=0
-    ){
-
-      offerButton.disabled=true;
-
-      offerButton.textContent=
-        "SIN DINERO";
-
-    }
-
-    else{
-
-      offerButton.disabled=false;
-
-      offerButton.textContent=
-        "OFERTAR €"+
-        selectedBid;
-
-    }
-
-  }
-
-
-  if(
-    teams.A.length===5 &&
-    teams.B.length===5
-  ){
-
-    document.getElementById(
-      "playButton"
-    ).classList.remove(
-      "hidden"
-    );
-
-  }
-  else{
-
-    document.getElementById(
-      "playButton"
-    ).classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  updateBackground();
-
-
-  if(openedMiniTeam){
-
-    renderMiniTeam(
-      openedMiniTeam
-    );
-
-  }
-
-}
-
-
-/* =================================================
-   MINI EQUIPO
-================================================= */
-
-function toggleMiniTeam(team){
-
-  const panel=
-    document.getElementById(
-      "miniTeam"
-    );
-
-  if(
-    openedMiniTeam===team &&
-    !panel.classList.contains(
-      "hidden"
-    )
-  ){
-
-    closeMiniTeam();
-
-    return;
-
-  }
-
-  openedMiniTeam=team;
-
-  renderMiniTeam(team);
-
-  panel.classList.remove(
-    "hidden"
-  );
-
-}
-
-
-function renderMiniTeam(team){
-
-  document.getElementById(
-    "miniTeamTitle"
-  ).textContent=
-    "EQUIPO "+team;
-
-  const container=
-    document.getElementById(
-      "miniTeamPlayers"
-    );
-
-  container.innerHTML="";
-
-  if(
-    teams[team].length===0
-  ){
-
-    container.innerHTML=`
-
-      <div class="mini-empty">
-        Todavía no compró jugadores
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-  teams[team].forEach(
-    player=>{
-
-      const row=
-        document.createElement(
-          "div"
-        );
-
-      row.className=
-        "mini-player";
-
-      const ratingText=
-        ratingsRevealed
-
-          ? `Media ${player.rating}`
-
-          : "Media oculta";
-
-      row.innerHTML=`
-
-        <div class="mini-position">
-          ${player.pos}
-        </div>
-
-        <div>
-
-          <div class="mini-name">
-            ${player.name}
-          </div>
-
-          <div class="mini-rating">
-            ${ratingText}
-          </div>
-
-        </div>
-
-        <div class="mini-price">
-          €${player.price}
-        </div>
-
-      `;
-
-      container.appendChild(
-        row
-      );
-
-    }
-  );
-
-}
-
-
-function closeMiniTeam(){
-
-  document.getElementById(
-    "miniTeam"
-  ).classList.add(
-    "hidden"
-  );
-
-  openedMiniTeam=null;
-
-}
-
-
-/* =================================================
-   CAMBIAR OFERTA
-================================================= */
-
-function changeBid(amount){
-
-  if(!auctionActive){
-    return;
-  }
-
-  if(
-    money[currentBidder]<=0
-  ){
-    return;
-  }
-
-  selectedBid+=amount;
-
-  const minimum=
-    currentBid+1;
-
-  if(
-    selectedBid<minimum
-  ){
-
-    selectedBid=
-      minimum;
-
-  }
-
-  if(
-    selectedBid<1
-  ){
-
-    selectedBid=1;
-
-  }
-
-  if(
-    selectedBid>
-    money[currentBidder]
-  ){
-
-    selectedBid=
-      money[currentBidder];
-
-  }
-
-  updateScreen();
-
-}
-
-
-/* =================================================
-   NUEVO JUGADOR
-================================================= */
-
-function nextPlayer(){
-
-  if(auctionActive){
-    return;
-  }
-
-  if(
-    teams.A.length===5 &&
-    teams.B.length===5
-  ){
-    return;
-  }
-
-
-  if(
-    goalkeeperPhase &&
-    goalkeeperPhaseComplete()
-  ){
-
-    goalkeeperPhase=false;
-
-    forceOpeningBid=false;
-
-    zeroBidPasses=0;
-
-  }
-
-
-  const available=
-    players.filter(
-      (player,index)=>{
-
-        if(
-          usedPlayers.includes(
-            index
-          )
-        ){
-          return false;
-        }
-
-        if(goalkeeperPhase){
-
-          return (
-            player.pos==="GP"
-          );
-
-        }
-
-        return (
-          player.pos!=="GP"
-        );
-
-      }
-    );
-
-
-  if(
-    available.length===0
-  ){
-
-    showMessage(
-      "No quedan jugadores disponibles."
-    );
-
-    return;
-
-  }
-
-
-  currentPlayer=
-    available[
-      Math.floor(
-        Math.random()*
-        available.length
-      )
-    ];
-
-
-  usedPlayers.push(
-    players.indexOf(
-      currentPlayer
-    )
-  );
-
-
-  currentBid=0;
-
-  leader=null;
-
-  selectedBid=1;
-
-  zeroBidPasses=0;
-
-  currentBidder=
-    firstBidder;
-
-  auctionActive=true;
-
-
-  if(goalkeeperPhase){
-
-    if(
-      hasGoalkeeper("A") &&
-      !hasGoalkeeper("B")
-    ){
-
-      currentBidder="B";
-
-    }
-
-    else if(
-      hasGoalkeeper("B") &&
-      !hasGoalkeeper("A")
-    ){
-
-      currentBidder="A";
-
-    }
-
-  }
-
-  else{
-
-    if(
-      teamIsFull(
-        currentBidder
-      )
-    ){
-
-      currentBidder=
-        otherPlayer(
-          currentBidder
-        );
-
-    }
-
-  }
-
-
-  /*
-    LOS DOS SIN DINERO
-
-    Se mantiene el turno normal.
-    El que pase manda el jugador
-    al rival.
-  */
-
-  if(
-    !bothTeamsBroke()
-  ){
-
-    const broke=
-      teamWithoutMoney();
-
-    if(broke){
-
-      const rival=
-        otherPlayer(
-          broke
-        );
-
-      if(
-        !teamIsFull(
-          rival
-        )
-      ){
-
-        currentBidder=
-          rival;
-
-      }
-
-      else if(
-        !teamIsFull(
-          broke
-        )
-      ){
-
-        document.getElementById(
-          "playerName"
-        ).textContent=
-          currentPlayer.name;
-
-        document.getElementById(
-          "playerPosition"
-        ).textContent=
-          getPositionName(
-            currentPlayer.pos
-          );
-
-        document.getElementById(
-          "positionCircle"
-        ).textContent=
-          currentPlayer.pos;
-
-        updateScreen();
-
-        setTimeout(
-          ()=>{
-
-            awardFreePlayer(
-              broke
-            );
-
-          },
-          500
-        );
-
-        return;
-
-      }
-
-    }
-
-  }
-
-
-  document.getElementById(
-    "playerName"
-  ).textContent=
-    currentPlayer.name;
-
-
-  document.getElementById(
-    "playerPosition"
-  ).textContent=
-    getPositionName(
-      currentPlayer.pos
-    );
-
-
-  document.getElementById(
-    "positionCircle"
-  ).textContent=
-    currentPlayer.pos;
-
-
-  if(
-    bothTeamsBroke()
-  ){
-
-    showMessage(
-
-      "💸 Ambos equipos tienen €0. " +
-      "Equipo "+
-      currentBidder+
-      " decide. Si pasa, "+
-      currentPlayer.name+
-      " irá gratis al Equipo "+
-      otherPlayer(
-        currentBidder
-      )+
-      "."
-
-    );
-
-  }
-
-  else{
-
-    const broke=
-      teamWithoutMoney();
-
-    if(broke){
-
-      showMessage(
-
-        "💸 Equipo "+
-        broke+
-        " tiene €0. Si Equipo "+
-        currentBidder+
-        " pasa, "+
-        currentPlayer.name+
-        " irá gratis al Equipo "+
-        broke+
-        "."
-
-      );
-
-    }
-
-    else if(goalkeeperPhase){
-
-      showMessage(
-
-        "🧤 "+
-        currentPlayer.name+
-        " sale al mercado."
-
-      );
-
-    }
-
-    else if(forceOpeningBid){
-
-      showMessage(
-
-        "⚠️ Equipo "+
-        currentBidder+
-        " debe ofertar mínimo €1 por "+
-        currentPlayer.name+
-        "."
-
-      );
-
-    }
-
-    else{
-
-      showMessage(
-
-        "🔥 "+
-        currentPlayer.name+
-        " sale al mercado."
-
-      );
-
-    }
-
-  }
-
-
-  updateScreen();
-
-}
-
-
-/* =================================================
-   OFERTAR
-================================================= */
-
-function makeBid(){
-
-  if(!auctionActive){
-    return;
-  }
-
-  if(
-    teamIsFull(
-      currentBidder
-    )
-  ){
-    return;
-  }
-
-  if(
-    money[currentBidder]<=0
-  ){
-    return;
-  }
-
-  if(
-    selectedBid<=
-    currentBid
-  ){
-    return;
-  }
-
-  if(
-    selectedBid>
-    money[currentBidder]
-  ){
-
-    showMessage(
-      "No tenés suficiente dinero."
-    );
-
-    return;
-
-  }
-
-
-  currentBid=
-    selectedBid;
-
-  leader=
-    currentBidder;
-
-  zeroBidPasses=0;
-
-  forceOpeningBid=false;
-
-
-  const opponent=
-    otherPlayer(
-      currentBidder
-    );
-
-
-  if(
-    money[opponent]===0 &&
-    !teamIsFull(opponent)
-  ){
-
-    awardPlayer();
-
-    return;
-
-  }
-
-
-  if(goalkeeperPhase){
-
-    if(
-      hasGoalkeeper(
-        opponent
-      )
-    ){
-
-      awardPlayer();
-
-      return;
-
-    }
-
-  }
-
-
-  if(
-    teamIsFull(
-      opponent
-    )
-  ){
-
-    awardPlayer();
-
-    return;
-
-  }
-
-
-  currentBidder=
-    opponent;
-
-
-  selectedBid=
-    currentBid+1;
-
-
-  if(
-    selectedBid>
-    money[currentBidder]
-  ){
-
-    selectedBid=
-      money[currentBidder];
-
-  }
-
-
-  showMessage(
-
-    "💰 Equipo "+
-    leader+
-    " ofrece €"+
-    currentBid+
-    ". Equipo "+
-    currentBidder+
-    " responde."
-
-  );
-
-
-  updateScreen();
-
-}
-
-
-/* =================================================
-   PASAR
-================================================= */
-
-function passBid(){
-
-  if(!auctionActive){
-    return;
-  }
-
-
-  /*
-    =========================================
-    LOS DOS SIN DINERO
-    =========================================
-
-    El que pasa envía el jugador
-    al equipo contrario.
-  */
-
-  if(
-    bothTeamsBroke() &&
-    !leader &&
-    currentBid===0
-  ){
-
-    const receiver=
-      otherPlayer(
-        currentBidder
-      );
-
-
-    showMessage(
-
-      "🎁 Equipo "+
-      currentBidder+
-      " pasa. "+
-      currentPlayer.name+
-      " va gratis al Equipo "+
-      receiver+
-      "."
-
-    );
-
-
-    awardFreePlayer(
-      receiver
-    );
-
-
-    return;
-
-  }
-
-
-  /*
-    SOLO UNO SIN DINERO
-  */
-
-  const broke=
-    teamWithoutMoney();
-
-
-  if(
-    broke &&
-    currentBidder!==broke &&
-    !leader &&
-    currentBid===0
-  ){
-
-    showMessage(
-
-      "🎁 Equipo "+
-      currentBidder+
-      " pasa. "+
-      currentPlayer.name+
-      " va gratis al Equipo "+
-      broke+
-      "."
-
-    );
-
-
-    awardFreePlayer(
-      broke
-    );
-
-
-    return;
-
-  }
-
-
-  /*
-    FASE ARQUEROS
-  */
-
-  if(goalkeeperPhase){
-
-    const AhasGP=
-      hasGoalkeeper("A");
-
-    const BhasGP=
-      hasGoalkeeper("B");
-
-
-    if(
-      AhasGP!==BhasGP &&
-      !leader &&
-      currentBid===0
-    ){
-
-      if(forceOpeningBid){
-
-        showMessage(
-
-          "⚠️ Ya rechazaste el arquero anterior. Debés ofertar mínimo €1."
-
-        );
-
-        return;
-
-      }
-
-
-      forceOpeningBid=true;
-
-
-      endAuction();
-
-      return;
-
-    }
-
-
-    if(
-      !AhasGP &&
-      !BhasGP &&
-      !leader &&
-      currentBid===0
-    ){
-
-      zeroBidPasses++;
-
-
-      if(
-        zeroBidPasses===1
-      ){
-
-        currentBidder=
-          otherPlayer(
-            currentBidder
-          );
-
-
-        updateScreen();
-
-        return;
-
-      }
-
-
-      if(
-        zeroBidPasses>=2
-      ){
-
-        forceOpeningBid=true;
-
-        endAuction();
-
-        return;
-
-      }
-
-    }
-
-
-    if(leader){
-
-      awardPlayer();
-
-      return;
-
-    }
-
-  }
-
-
-  /*
-    MERCADO GENERAL
-  */
-
-  const opponent=
-    otherPlayer(
-      currentBidder
-    );
-
-
-  const playingAlone=
-    teamIsFull(
-      opponent
-    );
-
-
-  if(
-    playingAlone &&
-    !leader &&
-    currentBid===0
-  ){
-
-    if(forceOpeningBid){
-
-      showMessage(
-
-        "⚠️ Ya pasaste al jugador anterior. Debés ofertar mínimo €1."
-
-      );
-
-      return;
-
-    }
-
-
-    forceOpeningBid=true;
-
-
-    endAuction();
-
-    return;
-
-  }
-
-
-  if(
-    forceOpeningBid &&
-    !leader &&
-    currentBid===0
-  ){
-
-    return;
-
-  }
-
-
-  if(
-    !leader &&
-    currentBid===0
-  ){
-
-    zeroBidPasses++;
-
-
-    if(
-      zeroBidPasses===1
-    ){
-
-      currentBidder=
-        otherPlayer(
-          currentBidder
-        );
-
-
-      updateScreen();
-
-      return;
-
-    }
-
-
-    if(
-      zeroBidPasses>=2
-    ){
-
-      forceOpeningBid=true;
-
-
-      endAuction();
-
-      return;
-
-    }
-
-  }
-
-
-  if(leader){
-
-    awardPlayer();
-
-  }
-
-}
-
-
-/* =================================================
-   ADJUDICAR
-================================================= */
-
-function awardPlayer(){
-
-  const winner=
-    leader;
-
-
-  if(
-    !winner ||
-    teamIsFull(
-      winner
-    )
-  ){
-    return;
-  }
-
-
-  money[winner]-=
-    currentBid;
-
-
-  teams[winner].push({
-
-    ...currentPlayer,
-
-    price:currentBid
-
-  });
-
-
-  if(
-    goalkeeperPhase &&
-    goalkeeperPhaseComplete()
-  ){
-
-    goalkeeperPhase=false;
-
-    forceOpeningBid=false;
-
-  }
-
-
-  endAuction();
-
-}
-
-
-/* =================================================
-   GRATIS
-================================================= */
-
-function awardFreePlayer(team){
-
-  if(
-    !currentPlayer ||
-    teamIsFull(
-      team
-    )
-  ){
-    return;
-  }
-
-
-  teams[team].push({
-
-    ...currentPlayer,
-
-    price:0
-
-  });
-
-
-  forceOpeningBid=false;
-
-  zeroBidPasses=0;
-
-
-  if(
-    goalkeeperPhase &&
-    goalkeeperPhaseComplete()
-  ){
-
-    goalkeeperPhase=false;
-
-  }
-
-
-  endAuction();
-
-}
-
-
-/* =================================================
-   FIN SUBASTA
-================================================= */
-
-function endAuction(){
-
-  auctionActive=false;
-
-  currentPlayer=null;
-
-  leader=null;
-
-  currentBid=0;
-
-  selectedBid=1;
-
-  zeroBidPasses=0;
-
-
-  firstBidder=
-    otherPlayer(
-      firstBidder
-    );
-
-
-  document.getElementById(
-    "playerName"
-  ).textContent=
-    "CARGANDO...";
-
-
-  document.getElementById(
-    "playerPosition"
-  ).textContent=
-    "";
-
-
-  document.getElementById(
-    "positionCircle"
-  ).textContent=
-    "⚽";
-
-
-  updateScreen();
-
-
-  if(
-    teams.A.length===5 &&
-    teams.B.length===5
-  ){
-
-    showMessage(
-      "✅ Equipos completos. Tocá JUGAR PARTIDO."
-    );
-
-    return;
-
-  }
-
-
-  setTimeout(
-    nextPlayer,
-    500
-  );
-
-}
-
-
-/* =================================================
-   CALCULAR EQUIPO
-================================================= */
-
-function calculateTeam(team){
-
-  const squad=
-    teams[team];
-
-
-  let gp=0;
-  let df=0;
-  let md=0;
-  let dl=0;
-
-
-  squad.forEach(
-    player=>{
-
-      if(player.pos==="GP") gp++;
-
-      if(player.pos==="DF") df++;
-
-      if(player.pos==="MD") md++;
-
-      if(player.pos==="DL") dl++;
-
-    }
-  );
-
-
-  function weightedAverage(
-    stat,
-    weights
-  ){
-
-    let total=0;
-
-    let totalWeight=0;
-
-
-    squad.forEach(
-      player=>{
-
-        const weight=
-          weights[player.pos]||0;
-
-
-        total+=
-          player[stat]*
-          weight;
-
-
-        totalWeight+=
-          weight;
-
-      }
-    );
-
-
-    if(
-      totalWeight===0
-    ){
-      return 0;
-    }
-
-
-    return (
-      total/
-      totalWeight
-    );
-
-  }
-
-
-  let attack=
-    weightedAverage(
-      "attack",
-      {
-        DL:1,
-        MD:.75,
-        DF:.35,
-        GP:.05
-      }
-    );
-
-
-  if(dl===0){
-    attack-=15;
-  }
-
-  if(dl===2){
-    attack+=2;
-  }
-
-  if(dl===3){
-    attack+=4;
-  }
-
-  if(dl>=4){
-    attack+=5;
-  }
-
-
-  let midfield=
-    weightedAverage(
-      "midfield",
-      {
-        DL:.45,
-        MD:1,
-        DF:.65,
-        GP:.10
-      }
-    );
-
-
-  if(md===0){
-    midfield-=15;
-  }
-
-  if(md===2){
-    midfield+=3;
-  }
-
-  if(md>=3){
-    midfield+=5;
-  }
-
-
-  let defense=
-    weightedAverage(
-      "defense",
-      {
-        DL:.15,
-        MD:.65,
-        DF:1,
-        GP:.25
-      }
-    );
-
-
-  if(df===0){
-    defense-=18;
-  }
-
-  if(df===2){
-    defense+=6;
-  }
-
-  if(df===3){
-    defense+=12;
-  }
-
-  if(df>=4){
-    defense+=16;
-  }
-
-
-  let goalkeeper=0;
-
-
-  squad.forEach(
-    player=>{
-
-      if(
-        player.pos==="GP"
-      ){
-
-        goalkeeper=
-          Math.max(
-            goalkeeper,
-            player.goalkeeping
-          );
-
-      }
-
-    }
-  );
-
-
-  if(gp===0){
-    goalkeeper=5;
-  }
-
-
-  if(dl===3){
-
-    midfield-=3;
-
-    defense-=7;
-
-  }
-
-
-  if(dl>=4){
-
-    midfield-=10;
-
-    defense-=16;
-
-  }
-
-
-  if(df>=3){
-
-    attack-=8;
-
-  }
-
-
-  if(
-    gp>=1 &&
-    df>=1 &&
-    md>=1 &&
-    dl>=1
-  ){
-
-    attack+=1;
-
-    midfield+=2;
-
-    defense+=2;
-
-  }
-
-
-  attack=
-    clamp(
-      attack,
-      10,
-      99
-    );
-
-
-  midfield=
-    clamp(
-      midfield,
-      10,
-      99
-    );
-
-
-  defense=
-    clamp(
-      defense,
-      5,
-      99
-    );
-
-
-  goalkeeper=
-    clamp(
-      goalkeeper,
-      5,
-      99
-    );
-
-
-  const overall=
-
-    attack*.30 +
-
-    midfield*.25 +
-
-    defense*.25 +
-
-    goalkeeper*.20;
-
-
-  return{
-
-    attack,
-
-    midfield,
-
-    defense,
-
-    goalkeeper,
-
-    overall,
-
-    positions:{
-      gp,
-      df,
-      md,
-      dl
-    }
-
+    version: 2,
+    roomCode: code,
+    status: playerBUid ? "playing" : "waiting",
+    playerAUid,
+    playerBUid,
+    money: {A:20,B:20},
+    teams: {A:[],B:[]},
+    usedPlayers: [],
+    currentPlayerIndex: null,
+    firstBidder: "A",
+    currentBidder: "A",
+    leader: null,
+    currentBid: 0,
+    zeroBidPasses: 0,
+    forceOpeningBid: false,
+    goalkeeperPhase: true,
+    rngSeed: seed,
+    result: null,
+    message: playerBUid ? "🧤 Comienza la fase obligatoria de arqueros." : "Esperando al Equipo B..."
   };
-
 }
 
+function appendPlayer(state, team, playerIndex, price){
+  if(!state.teams) state.teams={A:[],B:[]};
+  if(!Array.isArray(state.teams[team])) state.teams[team]=[];
+  if(state.teams[team].length>=5) return false;
+  state.teams[team].push({playerIndex,price});
+  return true;
+}
 
-/* =================================================
-   MEDIAS
-================================================= */
+function awardFreeInState(state, team, eventText=""){
+  const index = state.currentPlayerIndex;
+  if(index===null || index===undefined || teamIsFullState(state,team)) return;
+  appendPlayer(state,team,index,0);
+  if(state.goalkeeperPhase && goalkeeperPhaseCompleteState(state)) state.goalkeeperPhase=false;
+  finishAuctionInState(state,eventText || `🎁 ${players[index].name} va gratis al Equipo ${team}.`,false);
+}
 
-function revealRatings(){
-
-  ratingsRevealed=true;
-
-  renderTeam("A");
-
-  renderTeam("B");
-
-
-  if(openedMiniTeam){
-
-    renderMiniTeam(
-      openedMiniTeam
-    );
-
+function awardPaidInState(state, winner){
+  const index = state.currentPlayerIndex;
+  if(index===null || index===undefined || !winner || teamIsFullState(state,winner)) return;
+  state.money[winner] = Math.max(0,state.money[winner]-state.currentBid);
+  appendPlayer(state,winner,index,state.currentBid);
+  if(state.goalkeeperPhase && goalkeeperPhaseCompleteState(state)){
+    state.goalkeeperPhase=false;
+    state.forceOpeningBid=false;
   }
-
+  finishAuctionInState(state,`🏆 ${players[index].name} → Equipo ${winner} por €${state.currentBid}.`,false);
 }
 
+function finishAuctionInState(state,eventText="",keepForceOpening=false){
+  state.currentPlayerIndex=null;
+  state.leader=null;
+  state.currentBid=0;
+  state.zeroBidPasses=0;
+  if(!keepForceOpening) state.forceOpeningBid=false;
+  state.firstBidder=otherPlayer(state.firstBidder || "A");
+  prepareNextAuctionInState(state,eventText);
+}
 
-/* =================================================
-   PARTIDO DETERMINISTA
-================================================= */
-
-function playMatch(){
-
-  if(
-    teams.A.length!==5 ||
-    teams.B.length!==5
-  ){
+function prepareNextAuctionInState(state,eventPrefix=""){
+  if(state.status==="waiting") return;
+  if(teamIsFullState(state,"A") && teamIsFullState(state,"B")){
+    state.currentPlayerIndex=null;
+    state.status="ready";
+    state.message=(eventPrefix ? eventPrefix+" " : "")+"✅ Equipos completos. Tocá JUGAR PARTIDO.";
     return;
   }
 
-
-  revealRatings();
-
-
-  const A=
-    calculateTeam("A");
-
-  const B=
-    calculateTeam("B");
-
-
-  const difference=
-    A.overall-
-    B.overall;
-
-
-  let winA=
-    45+
-    difference*2;
-
-
-  let winB=
-    45-
-    difference*2;
-
-
-  let draw=10;
-
-
-  winA=
-    clamp(
-      winA,
-      5,
-      85
-    );
-
-
-  winB=
-    clamp(
-      winB,
-      5,
-      85
-    );
-
-
-  const total=
-    winA+
-    winB+
-    draw;
-
-
-  winA=
-    Math.round(
-      winA/
-      total*
-      100
-    );
-
-
-  winB=
-    Math.round(
-      winB/
-      total*
-      100
-    );
-
-
-  draw=
-    100-
-    winA-
-    winB;
-
-
-  let result;
-
-
-  if(
-    winA>winB
-  ){
-
-    result="A";
-
+  if(state.goalkeeperPhase && goalkeeperPhaseCompleteState(state)){
+    state.goalkeeperPhase=false;
+    state.forceOpeningBid=false;
   }
 
-  else if(
-    winB>winA
-  ){
-
-    result="B";
-
-  }
-
-  else{
-
-    result="DRAW";
-
-  }
-
-
-  const gap=
-    Math.abs(
-      winA-
-      winB
-    );
-
-
-  let goalsA=0;
-
-  let goalsB=0;
-
-
-  if(
-    result==="DRAW"
-  ){
-
-    goalsA=1;
-
-    goalsB=1;
-
-  }
-
-
-  else if(
-    result==="A"
-  ){
-
-    if(gap<=5){
-
-      goalsA=2;
-      goalsB=1;
-
-    }
-
-    else if(gap<=12){
-
-      goalsA=2;
-      goalsB=0;
-
-    }
-
-    else if(gap<=22){
-
-      goalsA=3;
-      goalsB=1;
-
-    }
-
-    else if(gap<=35){
-
-      goalsA=3;
-      goalsB=0;
-
-    }
-
-    else if(gap<=50){
-
-      goalsA=4;
-      goalsB=1;
-
-    }
-
-    else{
-
-      goalsA=5;
-      goalsB=0;
-
-    }
-
-  }
-
-
-  else{
-
-    if(gap<=5){
-
-      goalsA=1;
-      goalsB=2;
-
-    }
-
-    else if(gap<=12){
-
-      goalsA=0;
-      goalsB=2;
-
-    }
-
-    else if(gap<=22){
-
-      goalsA=1;
-      goalsB=3;
-
-    }
-
-    else if(gap<=35){
-
-      goalsA=0;
-      goalsB=3;
-
-    }
-
-    else if(gap<=50){
-
-      goalsA=1;
-      goalsB=4;
-
-    }
-
-    else{
-
-      goalsA=0;
-      goalsB=5;
-
-    }
-
-  }
-
-
-  document.getElementById(
-    "resultCard"
-  ).classList.remove(
-    "hidden"
-  );
-
-
-  document.getElementById(
-    "score"
-  ).textContent=
-    goalsA+
-    " - "+
-    goalsB;
-
-
-  document.getElementById(
-    "winnerText"
-  ).textContent=
-
-    result==="A"
-
-      ? "🏆 GANADOR: EQUIPO A"
-
-      : result==="B"
-
-      ? "🏆 GANADOR: EQUIPO B"
-
-      : "🤝 EMPATE";
-
-
-  document.getElementById(
-    "attackStats"
-  ).textContent=
-    Math.round(
-      A.attack
-    )+
-    " / "+
-    Math.round(
-      B.attack
-    );
-
-
-  document.getElementById(
-    "midStats"
-  ).textContent=
-    Math.round(
-      A.midfield
-    )+
-    " / "+
-    Math.round(
-      B.midfield
-    );
-
-
-  document.getElementById(
-    "defStats"
-  ).textContent=
-    Math.round(
-      A.defense
-    )+
-    " / "+
-    Math.round(
-      B.defense
-    );
-
-
-  document.getElementById(
-    "gkStats"
-  ).textContent=
-    Math.round(
-      A.goalkeeper
-    )+
-    " / "+
-    Math.round(
-      B.goalkeeper
-    );
-
-
-  document.getElementById(
-    "probabilityText"
-  ).textContent=
-
-    "Ventaja estimada — A: "+
-    winA+
-    "% | Equilibrio: "+
-    draw+
-    "% | B: "+
-    winB+
-    "%";
-
-
-  document.getElementById(
-    "analysisText"
-  ).textContent=
-    createAnalysis(
-      A,
-      B
-    );
-
-
-  document.getElementById(
-    "resultCard"
-  ).scrollIntoView({
-
-    behavior:"smooth"
-
+  const used = new Set(Array.isArray(state.usedPlayers) ? state.usedPlayers : []);
+  const available=[];
+  players.forEach((p,index)=>{
+    if(used.has(index)) return;
+    if(state.goalkeeperPhase ? p.pos==="GP" : p.pos!=="GP") available.push(index);
   });
+  if(!available.length){
+    state.currentPlayerIndex=null;
+    state.message="No quedan jugadores disponibles.";
+    return;
+  }
 
+  const index=chooseFromState(state,available);
+  state.currentPlayerIndex=index;
+  state.usedPlayers = Array.isArray(state.usedPlayers) ? state.usedPlayers : [];
+  state.usedPlayers.push(index);
+  state.currentBid=0;
+  state.leader=null;
+  state.zeroBidPasses=0;
+  state.currentBidder=state.firstBidder || "A";
+
+  if(state.goalkeeperPhase){
+    const aHas=hasGoalkeeperState(state,"A");
+    const bHas=hasGoalkeeperState(state,"B");
+    if(aHas && !bHas) state.currentBidder="B";
+    else if(bHas && !aHas) state.currentBidder="A";
+
+    /* Si solo falta un GP y ese equipo tiene €0, lo recibe gratis para evitar bloqueo. */
+    if(aHas !== bHas && state.money[state.currentBidder]===0){
+      const needed=state.currentBidder;
+      appendPlayer(state,needed,index,0);
+      state.currentPlayerIndex=null;
+      if(goalkeeperPhaseCompleteState(state)) state.goalkeeperPhase=false;
+      state.forceOpeningBid=false;
+      state.firstBidder=otherPlayer(state.firstBidder || "A");
+      prepareNextAuctionInState(state,`🧤 ${players[index].name} llega gratis al Equipo ${needed} porque necesitaba arquero y no tenía dinero.`);
+      return;
+    }
+  } else {
+    if(teamIsFullState(state,state.currentBidder)) state.currentBidder=otherPlayer(state.currentBidder);
+  }
+
+  if(!bothTeamsBrokeState(state)){
+    const broke=teamWithoutMoneyState(state);
+    if(broke){
+      const rival=otherPlayer(broke);
+      if(!teamIsFullState(state,rival)) state.currentBidder=rival;
+      else if(!teamIsFullState(state,broke)){
+        appendPlayer(state,broke,index,0);
+        state.currentPlayerIndex=null;
+        state.firstBidder=otherPlayer(state.firstBidder || "A");
+        prepareNextAuctionInState(state,`🎁 ${players[index].name} llega gratis al Equipo ${broke} porque el rival ya completó su equipo.`);
+        return;
+      }
+    }
+  }
+
+  const p=players[index];
+  let instruction="";
+  if(bothTeamsBrokeState(state)){
+    instruction=`💸 Ambos tienen €0. Equipo ${state.currentBidder}: si pasás, ${p.name} va gratis al Equipo ${otherPlayer(state.currentBidder)}.`;
+  } else {
+    const broke=teamWithoutMoneyState(state);
+    if(broke) instruction=`💸 Equipo ${broke} tiene €0. Si Equipo ${state.currentBidder} pasa, ${p.name} va gratis al Equipo ${broke}.`;
+    else if(state.goalkeeperPhase) instruction=`🧤 ${p.name} sale al mercado.`;
+    else if(state.forceOpeningBid) instruction=`⚠️ Equipo ${state.currentBidder} debe ofertar mínimo €1 por ${p.name}.`;
+    else instruction=`🔥 ${p.name} sale al mercado.`;
+  }
+  state.message=(eventPrefix ? eventPrefix+" " : "")+instruction;
 }
 
+function canCurrentUserAct(state){
+  return myTeam && state && state.status!=="waiting" && state.currentPlayerIndex!==null && state.currentBidder===myTeam;
+}
 
-/* =================================================
-   ANÁLISIS
-================================================= */
+async function mutateGame(mutator){
+  if(!db || !roomCode || !uid) return;
+  const gameRef=ref(db,`games/${roomCode}`);
+  try{
+    const result=await runTransaction(gameRef,current=>{
+      if(!current) return;
+      const team=current.playerAUid===uid ? "A" : current.playerBUid===uid ? "B" : null;
+      if(!team) return;
+      const next=JSON.parse(JSON.stringify(current));
+      const changed=mutator(next,team);
+      return changed===false ? undefined : next;
+    },{applyLocally:false});
+    if(!result.committed) console.log("Acción no aplicada");
+  }catch(error){
+    console.error(error);
+    $("message").textContent="Error de conexión. Intentá nuevamente.";
+  }
+}
+
+async function makeBid(){
+  await mutateGame((state,team)=>{
+    if(state.currentBidder!==team || state.currentPlayerIndex===null) return false;
+    if(teamIsFullState(state,team) || state.money[team]<=0) return false;
+    const amount=selectedBid;
+    if(amount<=state.currentBid || amount>state.money[team]) return false;
+    state.currentBid=amount;
+    state.leader=team;
+    state.zeroBidPasses=0;
+    state.forceOpeningBid=false;
+    const opponent=otherPlayer(team);
+    if((state.money[opponent]===0 && !teamIsFullState(state,opponent)) || teamIsFullState(state,opponent)){
+      awardPaidInState(state,team); return true;
+    }
+    if(state.goalkeeperPhase && hasGoalkeeperState(state,opponent)){
+      awardPaidInState(state,team); return true;
+    }
+    state.currentBidder=opponent;
+    state.message=`💰 Equipo ${team} ofrece €${amount}. Equipo ${opponent} responde.`;
+    return true;
+  });
+}
+
+async function passBid(){
+  await mutateGame((state,team)=>{
+    if(state.currentBidder!==team || state.currentPlayerIndex===null) return false;
+    const player=players[state.currentPlayerIndex];
+
+    if(bothTeamsBrokeState(state) && !state.leader && state.currentBid===0){
+      const receiver=otherPlayer(team);
+      awardFreeInState(state,receiver,`🎁 Equipo ${team} pasa. ${player.name} va gratis al Equipo ${receiver}.`);
+      return true;
+    }
+
+    const broke=teamWithoutMoneyState(state);
+    if(broke && team!==broke && !state.leader && state.currentBid===0){
+      awardFreeInState(state,broke,`🎁 Equipo ${team} pasa. ${player.name} va gratis al Equipo ${broke}.`);
+      return true;
+    }
+
+    if(state.goalkeeperPhase){
+      const aHas=hasGoalkeeperState(state,"A");
+      const bHas=hasGoalkeeperState(state,"B");
+      if(aHas!==bHas && !state.leader && state.currentBid===0){
+        if(state.forceOpeningBid){ state.message="⚠️ Ya rechazaste el arquero anterior. Debés ofertar mínimo €1."; return true; }
+        state.forceOpeningBid=true;
+        finishAuctionInState(state,`🧤 Equipo ${team} rechaza a ${player.name}.`,true);
+        return true;
+      }
+      if(!aHas && !bHas && !state.leader && state.currentBid===0){
+        state.zeroBidPasses=(state.zeroBidPasses||0)+1;
+        if(state.zeroBidPasses===1){
+          state.currentBidder=otherPlayer(team);
+          state.message=`Equipo ${team} pasa. Equipo ${state.currentBidder} puede ofertar o pasar.`;
+          return true;
+        }
+        state.forceOpeningBid=true;
+        finishAuctionInState(state,`🧤 Los dos rechazaron a ${player.name}.`,true);
+        return true;
+      }
+      if(state.leader){ awardPaidInState(state,state.leader); return true; }
+    }
+
+    const opponent=otherPlayer(team);
+    if(teamIsFullState(state,opponent) && !state.leader && state.currentBid===0){
+      if(state.forceOpeningBid){ state.message="⚠️ Ya pasaste al jugador anterior. Debés ofertar mínimo €1."; return true; }
+      state.forceOpeningBid=true;
+      finishAuctionInState(state,`⏭️ Equipo ${team} pasa por ${player.name}.`,true);
+      return true;
+    }
+
+    if(state.forceOpeningBid && !state.leader && state.currentBid===0){
+      state.message="⚠️ No podés pasar. Debés ofertar mínimo €1.";
+      return true;
+    }
+
+    if(!state.leader && state.currentBid===0){
+      state.zeroBidPasses=(state.zeroBidPasses||0)+1;
+      if(state.zeroBidPasses===1){
+        state.currentBidder=opponent;
+        state.message=`Equipo ${team} pasa. Equipo ${opponent} puede ofertar o pasar.`;
+        return true;
+      }
+      state.forceOpeningBid=true;
+      finishAuctionInState(state,`⏭️ Los dos pasan por ${player.name}.`,true);
+      return true;
+    }
+
+    if(state.leader){ awardPaidInState(state,state.leader); return true; }
+    return false;
+  });
+}
+
+function calculateTeamFromState(state,team){
+  const squad=teamEntries(state,team).map(entry=>players[entry.playerIndex]).filter(Boolean);
+  let gp=0,df=0,md=0,dl=0;
+  squad.forEach(player=>{ if(player.pos==="GP")gp++; if(player.pos==="DF")df++; if(player.pos==="MD")md++; if(player.pos==="DL")dl++; });
+  function weightedAverage(stat,weights){
+    let total=0,totalWeight=0;
+    squad.forEach(player=>{ const w=weights[player.pos]||0; total+=player[stat]*w; totalWeight+=w; });
+    return totalWeight ? total/totalWeight : 0;
+  }
+  let attack=weightedAverage("attack",{DL:1,MD:.75,DF:.35,GP:.05});
+  if(dl===0)attack-=15; if(dl===2)attack+=2; if(dl===3)attack+=4; if(dl>=4)attack+=5;
+  let midfield=weightedAverage("midfield",{DL:.45,MD:1,DF:.65,GP:.10});
+  if(md===0)midfield-=15; if(md===2)midfield+=3; if(md>=3)midfield+=5;
+  let defense=weightedAverage("defense",{DL:.15,MD:.65,DF:1,GP:.25});
+  if(df===0)defense-=18; if(df===2)defense+=6; if(df===3)defense+=12; if(df>=4)defense+=16;
+  let goalkeeper=0; squad.forEach(player=>{ if(player.pos==="GP") goalkeeper=Math.max(goalkeeper,player.goalkeeping); });
+  if(gp===0)goalkeeper=5;
+  if(dl===3){midfield-=3;defense-=7;}
+  if(dl>=4){midfield-=10;defense-=16;}
+  if(df>=3)attack-=8;
+  if(gp>=1&&df>=1&&md>=1&&dl>=1){attack+=1;midfield+=2;defense+=2;}
+  attack=clamp(attack,10,99); midfield=clamp(midfield,10,99); defense=clamp(defense,5,99); goalkeeper=clamp(goalkeeper,5,99);
+  const overall=attack*.30+midfield*.25+defense*.25+goalkeeper*.20;
+  return {attack,midfield,defense,goalkeeper,overall,positions:{gp,df,md,dl}};
+}
 
 function createAnalysis(A,B){
-
   const notes=[];
-
-
-  if(
-    A.positions.df===0
-  ){
-
-    notes.push(
-      "El Equipo A jugó sin defensores naturales."
-    );
-
-  }
-
-
-  if(
-    B.positions.df===0
-  ){
-
-    notes.push(
-      "El Equipo B jugó sin defensores naturales."
-    );
-
-  }
-
-
-  if(
-    A.positions.dl===3
-  ){
-
-    notes.push(
-      "El Equipo A apostó por tres delanteros."
-    );
-
-  }
-
-
-  if(
-    B.positions.dl===3
-  ){
-
-    notes.push(
-      "El Equipo B apostó por tres delanteros."
-    );
-
-  }
-
-
-  if(
-    A.attack>
-    B.attack+7
-  ){
-
-    notes.push(
-      "El Equipo A tuvo superioridad ofensiva."
-    );
-
-  }
-
-
-  if(
-    B.attack>
-    A.attack+7
-  ){
-
-    notes.push(
-      "El Equipo B tuvo superioridad ofensiva."
-    );
-
-  }
-
-
-  if(
-    A.midfield>
-    B.midfield+8
-  ){
-
-    notes.push(
-      "El Equipo A dominó el mediocampo."
-    );
-
-  }
-
-
-  if(
-    B.midfield>
-    A.midfield+8
-  ){
-
-    notes.push(
-      "El Equipo B dominó el mediocampo."
-    );
-
-  }
-
-
-  if(
-    A.defense>
-    B.defense+10
-  ){
-
-    notes.push(
-      "El Equipo A presentó una defensa superior."
-    );
-
-  }
-
-
-  if(
-    B.defense>
-    A.defense+10
-  ){
-
-    notes.push(
-      "El Equipo B presentó una defensa superior."
-    );
-
-  }
-
-
-  if(
-    notes.length===0
-  ){
-
-    notes.push(
-      "Los equipos quedaron muy parejos."
-    );
-
-  }
-
-
-  return notes.join(
-    " "
-  );
-
+  if(A.positions.df===0)notes.push("El Equipo A jugó sin defensores naturales.");
+  if(B.positions.df===0)notes.push("El Equipo B jugó sin defensores naturales.");
+  if(A.positions.dl===3)notes.push("El Equipo A apostó por tres delanteros.");
+  if(B.positions.dl===3)notes.push("El Equipo B apostó por tres delanteros.");
+  if(A.attack>B.attack+7)notes.push("El Equipo A tuvo superioridad ofensiva.");
+  if(B.attack>A.attack+7)notes.push("El Equipo B tuvo superioridad ofensiva.");
+  if(A.midfield>B.midfield+8)notes.push("El Equipo A dominó el mediocampo.");
+  if(B.midfield>A.midfield+8)notes.push("El Equipo B dominó el mediocampo.");
+  if(A.defense>B.defense+10)notes.push("El Equipo A presentó una defensa superior.");
+  if(B.defense>A.defense+10)notes.push("El Equipo B presentó una defensa superior.");
+  if(!notes.length)notes.push("Los equipos quedaron muy parejos.");
+  return notes.join(" ");
 }
 
-
-/* =================================================
-   RESET
-================================================= */
-
-function resetGame(){
-
-  money={
-    A:20,
-    B:20
-  };
-
-
-  teams={
-    A:[],
-    B:[]
-  };
-
-
-  usedPlayers=[];
-
-  currentPlayer=null;
-
-  firstBidder="A";
-
-  currentBidder="A";
-
-  leader=null;
-
-  currentBid=0;
-
-  selectedBid=1;
-
-  auctionActive=false;
-
-  zeroBidPasses=0;
-
-  forceOpeningBid=false;
-
-  openedMiniTeam=null;
-
-  ratingsRevealed=false;
-
-  goalkeeperPhase=true;
-
-
-  closeMiniTeam();
-
-
-  document.getElementById(
-    "resultCard"
-  ).classList.add(
-    "hidden"
-  );
-
-
-  document.getElementById(
-    "playerName"
-  ).textContent=
-    "CARGANDO...";
-
-
-  document.getElementById(
-    "playerPosition"
-  ).textContent=
-    "";
-
-
-  document.getElementById(
-    "positionCircle"
-  ).textContent=
-    "⚽";
-
-
-  showMessage(
-    "🧤 Comienza la fase obligatoria de arqueros."
-  );
-
-
-  updateScreen();
-
-
-  setTimeout(
-    nextPlayer,
-    500
-  );
-
+function buildMatchResult(state){
+  const A=calculateTeamFromState(state,"A");
+  const B=calculateTeamFromState(state,"B");
+  const difference=A.overall-B.overall;
+  let winA=clamp(45+difference*2,5,85);
+  let winB=clamp(45-difference*2,5,85);
+  let draw=10;
+  const total=winA+winB+draw;
+  winA=Math.round(winA/total*100);
+  winB=Math.round(winB/total*100);
+  draw=100-winA-winB;
+  let winner=winA>winB?"A":winB>winA?"B":"DRAW";
+  const gap=Math.abs(winA-winB);
+  let goalsA=0,goalsB=0;
+  if(winner==="DRAW"){goalsA=1;goalsB=1;}
+  else if(winner==="A"){
+    if(gap<=5){goalsA=2;goalsB=1;} else if(gap<=12){goalsA=2;goalsB=0;} else if(gap<=22){goalsA=3;goalsB=1;} else if(gap<=35){goalsA=3;goalsB=0;} else if(gap<=50){goalsA=4;goalsB=1;} else {goalsA=5;goalsB=0;}
+  } else {
+    if(gap<=5){goalsA=1;goalsB=2;} else if(gap<=12){goalsA=0;goalsB=2;} else if(gap<=22){goalsA=1;goalsB=3;} else if(gap<=35){goalsA=0;goalsB=3;} else if(gap<=50){goalsA=1;goalsB=4;} else {goalsA=0;goalsB=5;}
+  }
+  return {goalsA,goalsB,winner,winA,winB,draw,A,B,analysis:createAnalysis(A,B)};
 }
 
+async function playMatch(){
+  await mutateGame((state)=>{
+    if(teamEntries(state,"A").length!==5 || teamEntries(state,"B").length!==5) return false;
+    if(!state.result) state.result=buildMatchResult(state);
+    state.status="finished";
+    state.message="🏆 Partido finalizado.";
+    return true;
+  });
+}
 
-/* =================================================
-   INICIO
-================================================= */
+async function resetGame(){
+  await mutateGame((state,team)=>{
+    if(team!=="A"){state.message="Solo el Equipo A puede reiniciar la partida.";return true;}
+    const seed=nextSeed(state.rngSeed||Date.now());
+    const reset=freshGameState(state.roomCode,state.playerAUid,state.playerBUid,seed);
+    Object.keys(state).forEach(k=>delete state[k]);
+    Object.assign(state,reset);
+    if(state.playerBUid) prepareNextAuctionInState(state,"🔄 Nueva partida.");
+    return true;
+  });
+}
 
-updateScreen();
+function renderTeam(team){
+  const container=$("team"+team); container.innerHTML="";
+  const entries=teamEntries(gameState,team);
+  for(let i=0;i<5;i++){
+    const slot=document.createElement("div"); slot.className="player-slot";
+    const entry=entries[i];
+    if(entry){
+      const player=players[entry.playerIndex];
+      const detail=gameState?.result ? `Media ${player.rating} · €${entry.price}` : `Comprado por €${entry.price}`;
+      slot.innerHTML=`<div class="slot-position">${player.pos}</div><div class="slot-info"><div class="slot-name">${player.name}</div><div class="slot-rating">${detail}</div></div>`;
+    } else slot.innerHTML=`<div class="slot-position">—</div><div class="slot-info"><div class="slot-name empty">Vacante</div></div>`;
+    container.appendChild(slot);
+  }
+}
 
+function renderMiniTeam(team){
+  $("miniTeamTitle").textContent="EQUIPO "+team;
+  const container=$("miniTeamPlayers"); container.innerHTML="";
+  const entries=teamEntries(gameState,team);
+  if(!entries.length){container.innerHTML='<div class="mini-empty">Todavía no compró jugadores</div>';return;}
+  entries.forEach(entry=>{
+    const player=players[entry.playerIndex];
+    const row=document.createElement("div"); row.className="mini-player";
+    row.innerHTML=`<div class="mini-position">${player.pos}</div><div><div class="mini-name">${player.name}</div><div class="mini-rating">${gameState?.result?`Media ${player.rating}`:"Media oculta"}</div></div><div class="mini-price">€${entry.price}</div>`;
+    container.appendChild(row);
+  });
+}
 
-showMessage(
-  "🧤 Comienza la fase obligatoria de arqueros."
-);
+function toggleMiniTeam(team){
+  if(openedMiniTeam===team && !$("miniTeam").classList.contains("hidden")){ closeMiniTeam(); return; }
+  openedMiniTeam=team; renderMiniTeam(team); $("miniTeam").classList.remove("hidden");
+}
+function closeMiniTeam(){ openedMiniTeam=null; $("miniTeam").classList.add("hidden"); }
 
+function updateBackground(){
+  document.body.classList.remove("turn-a","turn-b");
+  const turn=gameState?.currentBidder || "A";
+  document.body.classList.add(turn==="A"?"turn-a":"turn-b");
+}
 
-setTimeout(
-  nextPlayer,
-  500
-);
+function renderResult(){
+  const r=gameState?.result;
+  if(!r){$("resultCard").classList.add("hidden");return;}
+  $("resultCard").classList.remove("hidden");
+  $("score").textContent=`${r.goalsA} - ${r.goalsB}`;
+  $("winnerText").textContent=r.winner==="A"?"🏆 GANADOR: EQUIPO A":r.winner==="B"?"🏆 GANADOR: EQUIPO B":"🤝 EMPATE";
+  $("attackStats").textContent=`${Math.round(r.A.attack)} / ${Math.round(r.B.attack)}`;
+  $("midStats").textContent=`${Math.round(r.A.midfield)} / ${Math.round(r.B.midfield)}`;
+  $("defStats").textContent=`${Math.round(r.A.defense)} / ${Math.round(r.B.defense)}`;
+  $("gkStats").textContent=`${Math.round(r.A.goalkeeper)} / ${Math.round(r.B.goalkeeper)}`;
+  $("probabilityText").textContent=`Ventaja estimada — A: ${r.winA}% | Equilibrio: ${r.draw}% | B: ${r.winB}%`;
+  $("analysisText").textContent=r.analysis || "";
+}
 
+function updateScreen(){
+  if(!gameState) return;
+  $("moneyA").textContent="€"+gameState.money.A; $("moneyB").textContent="€"+gameState.money.B;
+  $("turnMoneyA").textContent="€"+gameState.money.A; $("turnMoneyB").textContent="€"+gameState.money.B;
+  renderTeam("A"); renderTeam("B");
+
+  const player=playerByIndex(gameState.currentPlayerIndex);
+  $("playerName").textContent=player?player.name:(gameState.status==="waiting"?"ESPERANDO RIVAL":"SIN JUGADOR");
+  $("playerPosition").textContent=player?getPositionName(player.pos):"";
+  $("positionCircle").textContent=player?player.pos:"⚽";
+  $("currentBid").textContent="€"+(gameState.currentBid||0);
+  $("bidLeader").textContent=gameState.leader?`Equipo ${gameState.leader} tiene la mejor oferta`:"Sin ofertas";
+  $("phaseBadge").textContent=gameState.goalkeeperPhase?"🧤 FASE DE ARQUEROS":"⚽ MERCADO GENERAL";
+  $("message").textContent=gameState.message||"";
+
+  const turnBadge=$("turnBadge");
+  turnBadge.classList.remove("turn-a-badge","turn-b-badge");
+  turnBadge.classList.add(gameState.currentBidder==="A"?"turn-a-badge":"turn-b-badge");
+  turnBadge.innerHTML=gameState.currentBidder==="A"?"🔵 TURNO DE OFERTAR: A":"🔴 TURNO DE OFERTAR: B";
+
+  const auctionKey=`${gameState.currentPlayerIndex}|${gameState.currentBid}|${gameState.currentBidder}`;
+  if(auctionKey!==lastAuctionKey){
+    selectedBid=Math.max(1,(gameState.currentBid||0)+1);
+    if(myTeam && gameState.currentBidder===myTeam) selectedBid=Math.min(selectedBid,gameState.money[myTeam]);
+    lastAuctionKey=auctionKey;
+  }
+  $("bidValue").textContent=selectedBid;
+
+  const myTurn=canCurrentUserAct(gameState);
+  const hasMoney=myTeam ? gameState.money[myTeam]>0 : false;
+  const bothBroke=bothTeamsBrokeState(gameState);
+  const broke=teamWithoutMoneyState(gameState);
+  const requiredPassDisabled=gameState.forceOpeningBid && !gameState.leader && gameState.currentBid===0 && !(broke && myTeam!==broke) && !bothBroke;
+
+  $("bidMinus").disabled=!myTurn || !hasMoney;
+  $("bidPlus").disabled=!myTurn || !hasMoney;
+  $("offerButton").disabled=!myTurn || !hasMoney || selectedBid<=gameState.currentBid;
+  $("passButton").disabled=!myTurn || requiredPassDisabled;
+
+  if(!myTurn){
+    $("offerButton").textContent="ESPERANDO AL RIVAL";
+    $("passButton").textContent="ESPERANDO AL RIVAL";
+  } else if(!hasMoney){
+    $("offerButton").textContent="SIN DINERO";
+    $("passButton").textContent="PASAR";
+  } else {
+    $("offerButton").textContent=`OFERTAR €${selectedBid}`;
+    $("passButton").textContent=requiredPassDisabled?"DEBÉS OFERTAR €1":"PASAR";
+  }
+
+  const full=teamEntries(gameState,"A").length===5 && teamEntries(gameState,"B").length===5;
+  $("playButton").classList.toggle("hidden",!full || Boolean(gameState.result));
+  $("playButton").disabled=!full;
+  $("resetButton").disabled=myTeam!=="A";
+  $("resetButton").textContent=myTeam==="A"?"Reiniciar partida":"Solo A puede reiniciar";
+
+  if(openedMiniTeam) renderMiniTeam(openedMiniTeam);
+  renderResult(); updateBackground();
+}
+
+async function createRoom(){
+  if(!db || !uid) return setLobbyMessage("Firebase todavía no está listo.",true);
+  $("createRoomButton").disabled=true;
+  try{
+    for(let attempt=0;attempt<8;attempt++){
+      const code=generateRoomCode();
+      const roomRef=ref(db,`games/${code}`);
+      const tx=await runTransaction(roomRef,current=> current ? undefined : freshGameState(code,uid,null,Date.now()>>>0),{applyLocally:false});
+      if(tx.committed){
+        roomCode=code; myTeam="A"; history.replaceState(null,"",`${location.pathname}?room=${code}`);
+        showCreatedRoom(code); listenToRoom(code); return;
+      }
+    }
+    throw new Error("No se pudo generar una sala.");
+  }catch(error){ console.error(error); setLobbyMessage("No se pudo crear la sala: "+error.message,true); }
+  finally{$("createRoomButton").disabled=false;}
+}
+
+async function joinRoom(){
+  if(!db || !uid) return setLobbyMessage("Firebase todavía no está listo.",true);
+  const code=normalizeCode($("roomCodeInput").value);
+  if(code.length!==6) return setLobbyMessage("Ingresá el código de 6 caracteres.",true);
+  $("joinRoomButton").disabled=true;
+  try{
+    const roomRef=ref(db,`games/${code}`);
+    const tx=await runTransaction(roomRef,current=>{
+      if(!current) return;
+      if(current.playerAUid===uid) return current;
+      if(current.playerBUid && current.playerBUid!==uid) return;
+      const state=JSON.parse(JSON.stringify(current));
+      state.playerBUid=uid;
+      if(state.status==="waiting"){
+        state.status="playing";
+        prepareNextAuctionInState(state,"✅ Equipo B conectado.");
+      }
+      return state;
+    },{applyLocally:false});
+    if(!tx.committed) throw new Error("La sala no existe o ya está completa.");
+    const state=tx.snapshot.val();
+    roomCode=code; myTeam=state.playerAUid===uid?"A":"B";
+    history.replaceState(null,"",`${location.pathname}?room=${code}`);
+    listenToRoom(code);
+  }catch(error){ console.error(error); setLobbyMessage(error.message,true); }
+  finally{$("joinRoomButton").disabled=false;}
+}
+
+function showCreatedRoom(code){
+  $("roomReady").classList.remove("screen-hidden");
+  $("roomCodeBig").textContent=code;
+  setLobbyMessage("Sala creada. Pasale el código al segundo jugador.");
+}
+
+function enterGameScreen(state){
+  lobbyScreen.classList.add("screen-hidden");
+  gameScreen.classList.remove("screen-hidden");
+  $("gameRoomCode").textContent=roomCode;
+  const pill=$("myTeamPill");
+  pill.textContent="Sos Equipo "+myTeam;
+  pill.className="my-team-pill "+(myTeam==="A"?"a":"b");
+  $("connectionDot").classList.add("online");
+  $("connectionText").textContent=state.playerBUid?"Ambos conectados":"Esperando rival";
+}
+
+function listenToRoom(code){
+  if(unsubscribeGame) unsubscribeGame();
+  const roomRef=ref(db,`games/${code}`);
+  unsubscribeGame=onValue(roomRef,snapshot=>{
+    const state=snapshot.val();
+    if(!state){ leaveRoom(false); setLobbyMessage("La sala ya no existe.",true); return; }
+    gameState=state;
+    myTeam=state.playerAUid===uid?"A":state.playerBUid===uid?"B":null;
+    if(!myTeam){ leaveRoom(false); setLobbyMessage("No pertenecés a esta sala.",true); return; }
+    if(state.status==="waiting" && myTeam==="A"){
+      lobbyScreen.classList.remove("screen-hidden"); gameScreen.classList.add("screen-hidden");
+      showCreatedRoom(code); $("waitingText").textContent="Esperando al Equipo B...";
+    } else {
+      enterGameScreen(state); updateScreen();
+    }
+  },error=>{ console.error(error); $("connectionText").textContent="Error de conexión"; });
+}
+
+async function tryResumeFromUrl(){
+  const code=normalizeCode(new URLSearchParams(location.search).get("room"));
+  if(code.length!==6 || !db || !uid) return;
+  const snap=await get(ref(db,`games/${code}`));
+  if(!snap.exists()) return;
+  const state=snap.val();
+  if(state.playerAUid===uid || state.playerBUid===uid){ roomCode=code; myTeam=state.playerAUid===uid?"A":"B"; listenToRoom(code); }
+  else { $("roomCodeInput").value=code; setLobbyMessage("Sala encontrada. Tocá UNIRSE A PARTIDA."); }
+}
+
+function leaveRoom(clearUrl=true){
+  if(unsubscribeGame) unsubscribeGame();
+  unsubscribeGame=null; roomCode=null; myTeam=null; gameState=null; openedMiniTeam=null; lastAuctionKey="";
+  gameScreen.classList.add("screen-hidden"); lobbyScreen.classList.remove("screen-hidden"); $("roomReady").classList.add("screen-hidden");
+  if(clearUrl) history.replaceState(null,"",location.pathname);
+}
+
+function changeBid(delta){
+  if(!gameState || !canCurrentUserAct(gameState) || !myTeam || gameState.money[myTeam]<=0) return;
+  const min=Math.max(1,(gameState.currentBid||0)+1);
+  selectedBid=clamp(selectedBid+delta,min,gameState.money[myTeam]);
+  $("bidValue").textContent=selectedBid;
+  $("offerButton").textContent=`OFERTAR €${selectedBid}`;
+}
+
+$("createRoomButton").addEventListener("click",createRoom);
+$("joinRoomButton").addEventListener("click",joinRoom);
+$("roomCodeInput").addEventListener("input",e=>e.target.value=normalizeCode(e.target.value));
+$("copyRoomButton").addEventListener("click",async()=>{
+  try{ await navigator.clipboard.writeText(roomCode||""); $("copyRoomButton").textContent="¡COPIADO!"; setTimeout(()=>$("copyRoomButton").textContent="COPIAR CÓDIGO",1200); }catch{ setLobbyMessage("Código: "+roomCode); }
+});
+$("teamAMoneyCard").addEventListener("click",()=>toggleMiniTeam("A"));
+$("teamBMoneyCard").addEventListener("click",()=>toggleMiniTeam("B"));
+$("closeMiniTeamButton").addEventListener("click",closeMiniTeam);
+$("bidMinus").addEventListener("click",()=>changeBid(-1));
+$("bidPlus").addEventListener("click",()=>changeBid(1));
+$("offerButton").addEventListener("click",makeBid);
+$("passButton").addEventListener("click",passBid);
+$("playButton").addEventListener("click",playMatch);
+$("resetButton").addEventListener("click",resetGame);
+$("leaveRoomButton").addEventListener("click",()=>leaveRoom(true));
+
+async function boot(){
+  if(!firebaseConfigured()){
+    firebaseStatus.textContent="⚠️ Falta pegar firebaseConfig. El HTML ya está preparado; seguí los pasos que te voy a indicar.";
+    firebaseStatus.className="firebase-status error";
+    setLobbyMessage("Primero configurá Firebase y pegá los datos en firebaseConfig.",true);
+    $("createRoomButton").disabled=true; $("joinRoomButton").disabled=true;
+    return;
+  }
+  try{
+    app=initializeApp(firebaseConfig); auth=getAuth(app); db=getDatabase(app);
+    firebaseStatus.textContent="✅ Firebase configurado. Iniciando sesión anónima..."; firebaseStatus.className="firebase-status ok";
+    onAuthStateChanged(auth,async user=>{
+      if(user){ uid=user.uid; firebaseStatus.textContent="✅ Firebase conectado"; firebaseStatus.className="firebase-status ok"; setLobbyMessage("Creá una sala o ingresá el código de tu rival."); await tryResumeFromUrl(); }
+    });
+    await signInAnonymously(auth);
+  }catch(error){
+    console.error(error); firebaseStatus.textContent="❌ Error Firebase: "+error.message; firebaseStatus.className="firebase-status error"; setLobbyMessage("Revisá la configuración, Authentication y Realtime Database.",true);
+  }
+}
+
+boot();
 </script>
-
 </body>
 </html>
