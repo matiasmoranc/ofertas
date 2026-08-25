@@ -763,7 +763,7 @@ header p{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import { getDatabase, ref, get, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 /* =================================================
    1) PEGÁ ACÁ TU CONFIGURACIÓN DE FIREBASE
@@ -1437,31 +1437,128 @@ async function createRoom(){
 }
 
 async function joinRoom(){
-  if(!db || !uid) return setLobbyMessage("Firebase todavía no está listo.",true);
+  if(!db || !uid){
+    return setLobbyMessage("Firebase todavía no está listo.",true);
+  }
+
   const code=normalizeCode($("roomCodeInput").value);
-  if(code.length!==6) return setLobbyMessage("Ingresá el código de 6 caracteres.",true);
+
+  if(code.length!==6){
+    return setLobbyMessage("Ingresá el código de 6 caracteres.",true);
+  }
+
   $("joinRoomButton").disabled=true;
+  setLobbyMessage("Buscando sala...");
+
   try{
     const roomRef=ref(db,`games/${code}`);
-    const tx=await runTransaction(roomRef,current=>{
-      if(!current) return;
-      if(current.playerAUid===uid) return current;
-      if(current.playerBUid && current.playerBUid!==uid) return;
-      const state=JSON.parse(JSON.stringify(current));
-      state.playerBUid=uid;
-      if(state.status==="waiting"){
-        state.status="playing";
-        prepareNextAuctionInState(state,"✅ Equipo B conectado.");
+
+    /*
+      1) Primero leemos la sala.
+      Esto evita el problema que podía ocurrir
+      al intentar unirse directamente con una transacción.
+    */
+    const snap=await get(roomRef);
+
+    if(!snap.exists()){
+      throw new Error(`La sala ${code} no existe.`);
+    }
+
+    const current=snap.val();
+
+    /*
+      2) El creador ya es Equipo A.
+    */
+    if(current.playerAUid===uid){
+      roomCode=code;
+      myTeam="A";
+      history.replaceState(null,"",`${location.pathname}?room=${code}`);
+      listenToRoom(code);
+      return;
+    }
+
+    /*
+      3) Si ya existe otro Equipo B, la sala está completa.
+      Si playerBUid es este mismo usuario, simplemente reingresa.
+    */
+    if(current.playerBUid && current.playerBUid!==uid){
+      throw new Error("La sala ya está ocupada por dos jugadores.");
+    }
+
+    /*
+      4) Armamos el nuevo estado completo en memoria.
+    */
+    const state=JSON.parse(JSON.stringify(current));
+
+    state.playerBUid=uid;
+
+    if(state.status==="waiting"){
+      state.status="playing";
+
+      /*
+        Generamos el primer jugador solamente una vez,
+        justo cuando entra el Equipo B.
+      */
+      if(state.currentPlayerIndex===null || state.currentPlayerIndex===undefined){
+        prepareNextAuctionInState(
+          state,
+          "✅ Equipo B conectado."
+        );
       }
-      return state;
-    },{applyLocally:false});
-    if(!tx.committed) throw new Error("La sala no existe o ya está completa.");
-    const state=tx.snapshot.val();
-    roomCode=code; myTeam=state.playerAUid===uid?"A":"B";
-    history.replaceState(null,"",`${location.pathname}?room=${code}`);
+    }
+
+    /*
+      5) Guardamos el estado actualizado.
+      update() resulta más simple y confiable para esta unión inicial.
+    */
+    await update(roomRef,state);
+
+    /*
+      6) Confirmamos que Firebase realmente guardó al Equipo B.
+    */
+    const confirmSnap=await get(roomRef);
+
+    if(!confirmSnap.exists()){
+      throw new Error("La sala desapareció antes de poder unirte.");
+    }
+
+    const confirmed=confirmSnap.val();
+
+    if(confirmed.playerBUid!==uid){
+      throw new Error("Firebase no pudo asignarte como Equipo B.");
+    }
+
+    roomCode=code;
+    myTeam="B";
+
+    history.replaceState(
+      null,
+      "",
+      `${location.pathname}?room=${code}`
+    );
+
+    setLobbyMessage(
+      "✅ Unido correctamente. Sos Equipo B."
+    );
+
     listenToRoom(code);
-  }catch(error){ console.error(error); setLobbyMessage(error.message,true); }
-  finally{$("joinRoomButton").disabled=false;}
+
+  }catch(error){
+    console.error("Error al unirse a la sala:",error);
+
+    const detail=
+      error?.code
+        ? `${error.message} (${error.code})`
+        : error.message;
+
+    setLobbyMessage(
+      detail || "No se pudo unir a la sala.",
+      true
+    );
+  }
+  finally{
+    $("joinRoomButton").disabled=false;
+  }
 }
 
 function showCreatedRoom(code){
