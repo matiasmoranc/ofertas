@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mercado Élite 5</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+  background: radial-gradient(circle at top, #173b26, #07100b 65%);
+  transition: background .45s ease;
+}
+
+body.turn-a {
+  background:
+    radial-gradient(
+      circle at top,
+      #174c7d 0%,
+      #0d3255 30%,
+      #081f36 65%,
+      #040d18 100%
+    );
+}
+
+body.turn-b {
+  background:
+    radial-gradient(
+      circle at top,
+      #7a1f2c 0%,
+      #4b141e 30%,
+      #2b0c12 65%,
+      #130509 100%
+    );
+}
+
+button {
+  font-family: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  width: min(1200px, 100%);
+  margin: auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.ball {
+  font-size: 44px;
+}
+
+header h1 {
+  margin: 5px 0;
+  font-size: 38px;
+  letter-spacing: 2px;
+}
+
+header p {
+  margin: 0;
+  color: #a8b7ad;
+}
+
+.game {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  gap: 15px;
+}
+
+.team-card,
+.auction-card,
+.result-card {
+  background: rgba(10,20,15,.90);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  padding-bottom: 15px;
+}
+
+.team-header small,
+.budget small {
+  display: block;
+  color: #87988d;
+  font-size: 10px;
+}
+
+.team-header h2 {
+  margin: 3px 0 0;
+  font-size: 20px;
+}
+
+.budget {
+  text-align: right;
+}
+
+.budget strong {
+  color: #baff42;
+  font-size: 27px;
+}
+
+.squad {
+  margin-top: 15px;
+}
+
+.player-slot {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.slot-position {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #263d2f;
+  color: #ffd45c;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.slot-info {
+  flex: 1;
+}
+
+.slot-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.slot-rating {
+  color: #9caf9f;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.empty {
+  color: #63756a;
+}
+
+.auction-card {
+  text-align: center;
+}
+
+.turn-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.turn-money {
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.28);
+  cursor: pointer;
+  user-select: none;
+  transition: transform .15s ease, background .15s ease;
+}
+
+.turn-money:active {
+  transform: scale(.96);
+}
+
+.turn-money span {
+  display: block;
+  font-size: 10px;
+  opacity: .75;
+}
+
+.turn-money strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 19px;
+}
+
+.turn-money small {
+  display: block;
+  margin-top: 3px;
+  font-size: 8px;
+  opacity: .5;
+}
+
+.team-a-money {
+  text-align: left;
+  color: #8ec9ff;
+}
+
+.team-b-money {
+  text-align: right;
+  color: #ff9a9a;
+}
+
+.turn-badge {
+  display: inline-block;
+  background: rgba(0,0,0,.35);
+  color: #d6ff91;
+  border-radius: 30px;
+  padding: 9px 13px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.mini-team {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(4,12,8,.97);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.mini-team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mini-team-header strong {
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.mini-team-header button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255,255,255,.08);
+  color: white;
+}
+
+.mini-player {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.mini-player:last-child {
+  border-bottom: 0;
+}
+
+.mini-position {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #243c2d;
+  color: #ffd45c;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.mini-name {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.mini-rating {
+  margin-top: 2px;
+  font-size: 9px;
+  color: #82948a;
+}
+
+.mini-price {
+  color: #baff42;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.mini-empty {
+  padding: 15px 5px;
+  text-align: center;
+  color: #778b7f;
+  font-size: 11px;
+}
+
+.market-label {
+  margin-top: 20px;
+  color: #82938a;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.player-card {
+  margin: 15px 0;
+  padding: 25px 10px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(36,65,46,.9), rgba(8,19,13,.95));
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.position-circle {
+  width: 58px;
+  height: 58px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #baff42;
+  color: #08120c;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.player-card h2 {
+  margin: 15px 0 5px;
+  font-size: 27px;
+}
+
+.player-position {
+  color: #ffd45c;
+  font-weight: bold;
+}
+
+.player-rating {
+  margin-top: 8px;
+  color: #baff42;
+  font-weight: bold;
+}
+
+.current-bid {
+  margin: 18px 0;
+}
+
+.current-bid small {
+  color: #778b7f;
+}
+
+#currentBid {
+  font-size: 38px;
+  font-weight: 900;
+  color: #baff42;
+}
+
+#bidLeader {
+  color: #93a59a;
+  font-size: 13px;
+}
+
+.bid-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.bid-controls button {
+  width: 55px;
+  height: 55px;
+  border: 0;
+  border-radius: 15px;
+  background: rgba(255,255,255,.10);
+  color: white;
+  font-size: 27px;
+}
+
+.bid-value {
+  min-width: 100px;
+  padding: 13px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 15px;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.main-button,
+.pass-button,
+.play-button,
+.reset-button {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.main-button {
+  background: #baff42;
+  color: #07100b;
+  font-size: 16px;
+}
+
+.pass-button {
+  background: rgba(255,255,255,.10);
+  color: white;
+}
+
+.pass-button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.play-button {
+  background: #ffd45c;
+  color: #191300;
+  font-size: 17px;
+}
+
+.reset-button {
+  max-width: 250px;
+  display: block;
+  margin: 20px auto 0;
+  background: #402626;
+  color: #ffb5b5;
+}
+
+.message {
+  min-height: 55px;
+  margin: 15px 0 5px;
+  padding: 12px;
+  background: rgba(0,0,0,.2);
+  border-radius: 12px;
+  color: #b4c1b9;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.result-card {
+  max-width: 800px;
+  margin: 25px auto 0;
+  text-align: center;
+}
+
+.result-title {
+  color: #9caf9f;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.score {
+  font-size: 58px;
+  font-weight: 900;
+  margin: 10px 0;
+  color: #ffd45c;
+}
+
+.winner-text {
+  font-size: 23px;
+  font-weight: 900;
+  margin-bottom: 22px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+}
+
+.stat-box {
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 13px;
+}
+
+.stat-box span {
+  display: block;
+  color: #82948a;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.stat-box strong {
+  font-size: 16px;
+}
+
+.probability {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 14px;
+  background: #14281c;
+  color: #baff42;
+  font-weight: bold;
+}
+
+.analysis {
+  margin-top: 15px;
+  color: #b7c3bb;
+  line-height: 1.5;
+}
+
+@media(max-width:850px) {
+  .game {
+    grid-template-columns: 1fr;
+  }
+
+  .auction-card {
+    order: -1;
+  }
+
+  header h1 {
+    font-size: 29px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media(max-width:500px) {
+  .app {
+    padding: 12px;
+  }
+
+  .turn-row {
+    gap: 5px;
+  }
+
+  .turn-money {
+    padding: 7px;
+  }
+
+  .turn-money strong {
+    font-size: 16px;
+  }
+
+  .turn-badge {
+    padding: 8px 7px;
+    font-size: 9px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <div class="ball">⚽</div>
+  <h1>MERCADO ÉLITE 5</h1>
+  <p>Subastá jugadores, armá tu equipo y jugá el partido</p>
+</header>
+
+<div class="game">
+
+<section class="team-card">
+  <div class="team-header">
+    <div>
+      <small>JUGADOR</small>
+      <h2>🔵 EQUIPO A</h2>
+    </div>
+
+    <div class="budget">
+      <small>PRESUPUESTO</small>
+      <strong id="moneyA">€20</strong>
+    </div>
+  </div>
+
+  <div id="teamA" class="squad"></div>
+</section>
+
+<main class="auction-card">
+
+  <div class="turn-row">
+
+    <div class="turn-money team-a-money" onclick="toggleMiniTeam('A')">
+      <span>🔵 EQUIPO A</span>
+      <strong id="turnMoneyA">€20</strong>
+      <small>Ver equipo</small>
+    </div>
+
+    <div id="turnBadge" class="turn-badge">
+      OFERTA PRIMERO: A
+    </div>
+
+    <div class="turn-money team-b-money" onclick="toggleMiniTeam('B')">
+      <span>EQUIPO B 🔴</span>
+      <strong id="turnMoneyB">€20</strong>
+      <small>Ver equipo</small>
+    </div>
+
+  </div>
+
+  <div id="miniTeam" class="mini-team hidden">
+
+    <div class="mini-team-header">
+      <strong id="miniTeamTitle">EQUIPO</strong>
+      <button onclick="closeMiniTeam()">✕</button>
+    </div>
+
+    <div id="miniTeamPlayers"></div>
+
+  </div>
+
+  <div class="market-label">
+    JUGADOR EN EL MERCADO
+  </div>
+
+  <div class="player-card">
+
+    <div id="positionCircle" class="position-circle">?</div>
+
+    <h2 id="playerName">CARGANDO...</h2>
+
+    <div id="playerPosition" class="player-position">—</div>
+
+    <div id="playerRating" class="player-rating"></div>
+
+  </div>
+
+  <div class="current-bid">
+    <small>OFERTA ACTUAL</small>
+    <div id="currentBid">€0</div>
+    <div id="bidLeader">Sin ofertas</div>
+  </div>
+
+  <div class="bid-controls">
+    <button onclick="changeBid(-1)">−</button>
+
+    <div class="bid-value">
+      €<span id="bidValue">1</span>
+    </div>
+
+    <button onclick="changeBid(1)">+</button>
+  </div>
+
+  <button
+    id="offerButton"
+    class="main-button"
+    onclick="makeBid()"
+  >
+    OFERTAR €1
+  </button>
+
+  <button
+    id="passButton"
+    class="pass-button"
+    onclick="passBid()"
+  >
+    PASAR
+  </button>
+
+  <div id="message" class="message">
+    Preparando mercado...
+  </div>
+
+  <button
+    id="playButton"
+    class="play-button hidden"
+    onclick="playMatch()"
+  >
+    🏆 JUGAR PARTIDO
+  </button>
+
+</main>
+
+<section class="team-card">
+
+  <div class="team-header">
+
+    <div>
+      <small>JUGADOR</small>
+      <h2>🔴 EQUIPO B</h2>
+    </div>
+
+    <div class="budget">
+      <small>PRESUPUESTO</small>
+      <strong id="moneyB">€20</strong>
+    </div>
+
+  </div>
+
+  <div id="teamB" class="squad"></div>
+
+</section>
+
+</div>
+
+<section id="resultCard" class="result-card hidden">
+
+  <div class="result-title">
+    RESULTADO SIMULADO
+  </div>
+
+  <div id="score" class="score">
+    0 - 0
+  </div>
+
+  <div id="winnerText" class="winner-text"></div>
+
+  <div class="stats-grid">
+
+    <div class="stat-box">
+      <span>ATAQUE</span>
+      <strong id="attackStats"></strong>
+    </div>
+
+    <div class="stat-box">
+      <span>MEDIOCAMPO</span>
+      <strong id="midStats"></strong>
+    </div>
+
+    <div class="stat-box">
+      <span>DEFENSA</span>
+      <strong id="defStats"></strong>
+    </div>
+
+    <div class="stat-box">
+      <span>ARQUERO</span>
+      <strong id="gkStats"></strong>
+    </div>
+
+  </div>
+
+  <div id="probabilityText" class="probability"></div>
+
+  <div id="analysisText" class="analysis"></div>
+
+</section>
+
+<button class="reset-button" onclick="resetGame()">
+  Reiniciar partida
+</button>
+
+</div>
+
+<script>
+
+const players = [
+
+  {name:"Thibaut Courtois",pos:"GP",rating:94,attack:20,midfield:30,defense:45,goalkeeping:97},
+  {name:"Alisson Becker",pos:"GP",rating:92,attack:18,midfield:35,defense:44,goalkeeping:95},
+  {name:"Gianluigi Donnarumma",pos:"GP",rating:91,attack:17,midfield:28,defense:42,goalkeeping:94},
+  {name:"Emiliano Martínez",pos:"GP",rating:90,attack:18,midfield:29,defense:44,goalkeeping:93},
+
+  {name:"Virgil van Dijk",pos:"DF",rating:94,attack:53,midfield:69,defense:97,goalkeeping:10},
+  {name:"Rúben Dias",pos:"DF",rating:91,attack:45,midfield:66,defense:94,goalkeeping:10},
+  {name:"William Saliba",pos:"DF",rating:91,attack:46,midfield:69,defense:93,goalkeeping:10},
+  {name:"Antonio Rüdiger",pos:"DF",rating:90,attack:48,midfield:63,defense:92,goalkeeping:10},
+  {name:"Achraf Hakimi",pos:"DF",rating:91,attack:83,midfield:83,defense:85,goalkeeping:10},
+  {name:"Theo Hernández",pos:"DF",rating:90,attack:82,midfield:78,defense:84,goalkeeping:10},
+
+  {name:"Rodri",pos:"MD",rating:95,attack:74,midfield:97,defense:91,goalkeeping:10},
+  {name:"Jude Bellingham",pos:"MD",rating:94,attack:88,midfield:96,defense:82,goalkeeping:10},
+  {name:"Federico Valverde",pos:"MD",rating:92,attack:82,midfield:93,defense:84,goalkeeping:10},
+  {name:"Pedri",pos:"MD",rating:91,attack:76,midfield:95,defense:68,goalkeeping:10},
+  {name:"Kevin De Bruyne",pos:"MD",rating:92,attack:87,midfield:96,defense:61,goalkeeping:10},
+  {name:"Vitinha",pos:"MD",rating:91,attack:80,midfield:94,defense:72,goalkeeping:10},
+
+  {name:"Kylian Mbappé",pos:"DL",rating:97,attack:99,midfield:85,defense:35,goalkeeping:10},
+  {name:"Erling Haaland",pos:"DL",rating:96,attack:99,midfield:72,defense:38,goalkeeping:10},
+  {name:"Vinícius Jr.",pos:"DL",rating:96,attack:98,midfield:87,defense:37,goalkeeping:10},
+  {name:"Lamine Yamal",pos:"DL",rating:95,attack:96,midfield:90,defense:42,goalkeeping:10},
+  {name:"Mohamed Salah",pos:"DL",rating:95,attack:98,midfield:87,defense:42,goalkeeping:10},
+  {name:"Harry Kane",pos:"DL",rating:94,attack:97,midfield:85,defense:45,goalkeeping:10},
+  {name:"Bukayo Saka",pos:"DL",rating:92,attack:93,midfield:88,defense:48,goalkeeping:10},
+  {name:"Lautaro Martínez",pos:"DL",rating:92,attack:94,midfield:78,defense:49,goalkeeping:10},
+  {name:"Ousmane Dembélé",pos:"DL",rating:94,attack:96,midfield:88,defense:39,goalkeeping:10}
+
+];
+
+let money = {
+  A: 20,
+  B: 20
+};
+
+let teams = {
+  A: [],
+  B: []
+};
+
+let usedPlayers = [];
+
+let currentPlayer = null;
+
+let firstBidder = "A";
+let currentBidder = "A";
+
+let leader = null;
+
+let currentBid = 0;
+let selectedBid = 1;
+
+let auctionActive = false;
+
+let openedMiniTeam = null;
+
+let zeroBidPasses = 0;
+
+/*
+  Si los dos pasaron al jugador anterior,
+  el siguiente jugador exige oferta mínima.
+*/
+let forceOpeningBid = false;
+
+
+
+function otherPlayer(player) {
+  return player === "A" ? "B" : "A";
+}
+
+
+
+function teamIsFull(team) {
+  return teams[team].length >= 5;
+}
+
+
+
+function updateBackground() {
+
+  document.body.classList.remove(
+    "turn-a",
+    "turn-b"
+  );
+
+  const playerTurn =
+    auctionActive
+      ? currentBidder
+      : firstBidder;
+
+  if (playerTurn === "A") {
+    document.body.classList.add("turn-a");
+  } else {
+    document.body.classList.add("turn-b");
+  }
+
+}
+
+
+
+function renderTeam(team) {
+
+  const container =
+    document.getElementById(
+      "team" + team
+    );
+
+  container.innerHTML = "";
+
+  for (let i = 0; i < 5; i++) {
+
+    const slot =
+      document.createElement(
+        "div"
+      );
+
+    slot.className =
+      "player-slot";
+
+    const player =
+      teams[team][i];
+
+    if (player) {
+
+      slot.innerHTML = `
+        <div class="slot-position">
+          ${player.pos}
+        </div>
+
+        <div class="slot-info">
+          <div class="slot-name">
+            ${player.name}
+          </div>
+
+          <div class="slot-rating">
+            Media ${player.rating} · €${player.price}
+          </div>
+        </div>
+      `;
+
+    } else {
+
+      slot.innerHTML = `
+        <div class="slot-position">
+          —
+        </div>
+
+        <div class="slot-info">
+          <div class="slot-name empty">
+            Vacante
+          </div>
+        </div>
+      `;
+
+    }
+
+    container.appendChild(slot);
+
+  }
+
+}
+
+
+
+function updateScreen() {
+
+  document.getElementById("moneyA").textContent =
+    "€" + money.A;
+
+  document.getElementById("moneyB").textContent =
+    "€" + money.B;
+
+  document.getElementById("turnMoneyA").textContent =
+    "€" + money.A;
+
+  document.getElementById("turnMoneyB").textContent =
+    "€" + money.B;
+
+  renderTeam("A");
+  renderTeam("B");
+
+  document.getElementById("bidValue").textContent =
+    selectedBid;
+
+  document.getElementById("offerButton").textContent =
+    "OFERTAR €" + selectedBid;
+
+  document.getElementById("currentBid").textContent =
+    "€" + currentBid;
+
+  if (leader) {
+
+    document.getElementById("bidLeader").textContent =
+      "Equipo " +
+      leader +
+      " tiene la mejor oferta";
+
+  } else {
+
+    document.getElementById("bidLeader").textContent =
+      "Sin ofertas";
+
+  }
+
+  if (auctionActive) {
+
+    document.getElementById("turnBadge").textContent =
+      "TURNO DE OFERTAR: " +
+      currentBidder;
+
+  } else {
+
+    document.getElementById("turnBadge").textContent =
+      "OFERTA PRIMERO: " +
+      firstBidder;
+
+  }
+
+  /*
+    Bloqueamos PASAR si hay oferta obligatoria.
+  */
+  const passButton =
+    document.getElementById("passButton");
+
+  if (
+    auctionActive &&
+    forceOpeningBid &&
+    !leader &&
+    currentBid === 0
+  ) {
+
+    passButton.disabled = true;
+    passButton.textContent =
+      "DEBÉS OFERTAR €1";
+
+  } else {
+
+    passButton.disabled = false;
+    passButton.textContent =
+      "PASAR";
+
+  }
+
+  if (
+    teams.A.length === 5 &&
+    teams.B.length === 5
+  ) {
+
+    document.getElementById("playButton")
+      .classList.remove("hidden");
+
+  } else {
+
+    document.getElementById("playButton")
+      .classList.add("hidden");
+
+  }
+
+  updateBackground();
+
+  if (openedMiniTeam) {
+    renderMiniTeam(openedMiniTeam);
+  }
+
+}
+
+
+
+function toggleMiniTeam(team) {
+
+  const panel =
+    document.getElementById("miniTeam");
+
+  if (
+    openedMiniTeam === team &&
+    !panel.classList.contains("hidden")
+  ) {
+
+    closeMiniTeam();
+    return;
+
+  }
+
+  openedMiniTeam = team;
+
+  renderMiniTeam(team);
+
+  panel.classList.remove("hidden");
+
+}
+
+
+
+function renderMiniTeam(team) {
+
+  document.getElementById("miniTeamTitle").textContent =
+    "EQUIPO " + team;
+
+  const container =
+    document.getElementById("miniTeamPlayers");
+
+  container.innerHTML = "";
+
+  if (teams[team].length === 0) {
+
+    container.innerHTML = `
+      <div class="mini-empty">
+        Todavía no compró ningún jugador
+      </div>
+    `;
+
+    return;
+
+  }
+
+  teams[team].forEach(player => {
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "mini-player";
+
+    row.innerHTML = `
+      <div class="mini-position">
+        ${player.pos}
+      </div>
+
+      <div>
+        <div class="mini-name">
+          ${player.name}
+        </div>
+
+        <div class="mini-rating">
+          Media ${player.rating}
+        </div>
+      </div>
+
+      <div class="mini-price">
+        €${player.price}
+      </div>
+    `;
+
+    container.appendChild(row);
+
+  });
+
+}
+
+
+
+function closeMiniTeam() {
+
+  document.getElementById("miniTeam")
+    .classList.add("hidden");
+
+  openedMiniTeam = null;
+
+}
+
+
+
+function changeBid(amount) {
+
+  if (!auctionActive) {
+    return;
+  }
+
+  selectedBid += amount;
+
+  const minimum =
+    currentBid + 1;
+
+  if (selectedBid < minimum) {
+    selectedBid = minimum;
+  }
+
+  if (selectedBid < 1) {
+    selectedBid = 1;
+  }
+
+  if (
+    selectedBid >
+    money[currentBidder]
+  ) {
+
+    selectedBid =
+      money[currentBidder];
+
+  }
+
+  updateScreen();
+
+}
+
+
+
+function nextPlayer() {
+
+  if (auctionActive) {
+    return;
+  }
+
+  if (
+    teams.A.length === 5 &&
+    teams.B.length === 5
+  ) {
+
+    showMessage(
+      "Los dos equipos están completos."
+    );
+
+    return;
+
+  }
+
+  const available =
+    players.filter(
+      (player,index) => {
+        return !usedPlayers.includes(index);
+      }
+    );
+
+  if (
+    available.length === 0
+  ) {
+
+    showMessage(
+      "No quedan futbolistas disponibles."
+    );
+
+    return;
+
+  }
+
+  currentPlayer =
+    available[
+      Math.floor(
+        Math.random() *
+        available.length
+      )
+    ];
+
+  const originalIndex =
+    players.indexOf(currentPlayer);
+
+  usedPlayers.push(originalIndex);
+
+  currentBid = 0;
+  leader = null;
+
+  selectedBid = 1;
+
+  zeroBidPasses = 0;
+
+  currentBidder =
+    firstBidder;
+
+  auctionActive = true;
+
+  if (
+    teamIsFull(currentBidder)
+  ) {
+
+    currentBidder =
+      otherPlayer(currentBidder);
+
+  }
+
+  document.getElementById("playerName").textContent =
+    currentPlayer.name;
+
+  document.getElementById("playerPosition").textContent =
+    getPositionName(
+      currentPlayer.pos
+    );
+
+  document.getElementById("positionCircle").textContent =
+    currentPlayer.pos;
+
+  document.getElementById("playerRating").textContent =
+    "MEDIA " +
+    currentPlayer.rating;
+
+  if (forceOpeningBid) {
+
+    showMessage(
+      "⚠️ " +
+      currentPlayer.name +
+      " sale al mercado. Equipo " +
+      currentBidder +
+      " debe ofertar mínimo €1."
+    );
+
+  } else {
+
+    showMessage(
+      "🔥 " +
+      currentPlayer.name +
+      " sale al mercado. Equipo " +
+      currentBidder +
+      " oferta primero."
+    );
+
+  }
+
+  updateScreen();
+
+}
+
+
+
+function makeBid() {
+
+  if (!auctionActive) {
+    return;
+  }
+
+  if (
+    teamIsFull(currentBidder)
+  ) {
+    return;
+  }
+
+  if (
+    selectedBid <= currentBid
+  ) {
+    return;
+  }
+
+  if (
+    selectedBid >
+    money[currentBidder]
+  ) {
+
+    showMessage(
+      "El Equipo " +
+      currentBidder +
+      " no tiene suficiente dinero."
+    );
+
+    return;
+
+  }
+
+  currentBid =
+    selectedBid;
+
+  leader =
+    currentBidder;
+
+  zeroBidPasses = 0;
+
+  /*
+    Ya se cumplió la oferta obligatoria.
+  */
+  forceOpeningBid = false;
+
+  currentBidder =
+    otherPlayer(currentBidder);
+
+  if (
+    teamIsFull(currentBidder)
+  ) {
+
+    awardPlayer();
+    return;
+
+  }
+
+  selectedBid =
+    currentBid + 1;
+
+  if (
+    selectedBid >
+    money[currentBidder]
+  ) {
+
+    selectedBid =
+      money[currentBidder];
+
+  }
+
+  showMessage(
+    "💰 Equipo " +
+    leader +
+    " ofrece €" +
+    currentBid +
+    ". Ahora responde el Equipo " +
+    currentBidder +
+    "."
+  );
+
+  updateScreen();
+
+}
+
+
+
+function passBid() {
+
+  if (!auctionActive) {
+    return;
+  }
+
+  /*
+    Este jugador exige oferta inicial.
+  */
+  if (
+    forceOpeningBid &&
+    !leader &&
+    currentBid === 0
+  ) {
+
+    showMessage(
+      "⚠️ Equipo " +
+      currentBidder +
+      ": no podés pasar. Debés ofertar mínimo €1."
+    );
+
+    return;
+
+  }
+
+  /*
+    Todavía no hubo oferta.
+  */
+  if (
+    !leader &&
+    currentBid === 0
+  ) {
+
+    zeroBidPasses++;
+
+    const passingPlayer =
+      currentBidder;
+
+    /*
+      Primer pase.
+    */
+    if (
+      zeroBidPasses === 1
+    ) {
+
+      currentBidder =
+        otherPlayer(currentBidder);
+
+      if (
+        teamIsFull(currentBidder)
+      ) {
+
+        discardCurrentPlayer();
+        return;
+
+      }
+
+      showMessage(
+        "Equipo " +
+        passingPlayer +
+        " pasa. Equipo " +
+        currentBidder +
+        " puede ofertar o pasar."
+      );
+
+      updateScreen();
+
+      return;
+
+    }
+
+    /*
+      Segundo pase consecutivo.
+    */
+    if (
+      zeroBidPasses >= 2
+    ) {
+
+      showMessage(
+        "⏭️ Los dos equipos pasan. " +
+        currentPlayer.name +
+        " sale del mercado. El próximo jugador tendrá oferta obligatoria."
+      );
+
+      forceOpeningBid = true;
+
+      endAuction();
+
+      return;
+
+    }
+
+  }
+
+  /*
+    Ya existe oferta:
+    quien pasa pierde.
+  */
+  if (leader) {
+
+    awardPlayer();
+
+  }
+
+}
+
+
+
+function awardPlayer() {
+
+  const winner =
+    leader;
+
+  money[winner] -=
+    currentBid;
+
+  teams[winner].push({
+
+    ...currentPlayer,
+
+    price: currentBid
+
+  });
+
+  showMessage(
+    "🏆 " +
+    currentPlayer.name +
+    " ficha por el Equipo " +
+    winner +
+    " por €" +
+    currentBid +
+    "."
+  );
+
+  endAuction();
+
+}
+
+
+
+function discardCurrentPlayer() {
+
+  showMessage(
+    "⏭️ " +
+    currentPlayer.name +
+    " sale del mercado sin ser fichado."
+  );
+
+  endAuction();
+
+}
+
+
+
+function endAuction() {
+
+  auctionActive = false;
+
+  currentPlayer = null;
+
+  leader = null;
+
+  currentBid = 0;
+
+  selectedBid = 1;
+
+  zeroBidPasses = 0;
+
+  firstBidder =
+    otherPlayer(firstBidder);
+
+  document.getElementById("playerName").textContent =
+    "CARGANDO...";
+
+  document.getElementById("playerPosition").textContent =
+    "";
+
+  document.getElementById("positionCircle").textContent =
+    "⚽";
+
+  document.getElementById("playerRating").textContent =
+    "";
+
+  updateScreen();
+
+  if (
+    teams.A.length === 5 &&
+    teams.B.length === 5
+  ) {
+
+    showMessage(
+      "✅ Los dos equipos están completos. Ahora jugá el partido."
+    );
+
+    return;
+
+  }
+
+  setTimeout(
+    () => {
+      nextPlayer();
+    },
+    650
+  );
+
+}
+
+
+
+function getPositionName(position) {
+
+  const names = {
+    GP: "GUARDAMETA",
+    DF: "DEFENSA",
+    MD: "MEDIOCAMPISTA",
+    DL: "DELANTERO"
+  };
+
+  return names[position];
+
+}
+
+
+
+function showMessage(text) {
+
+  document.getElementById("message").textContent =
+    text;
+
+}
+
+
+
+function clamp(value,min,max) {
+
+  return Math.max(
+    min,
+    Math.min(
+      max,
+      value
+    )
+  );
+
+}
+
+
+
+function calculateTeam(team) {
+
+  const squad =
+    teams[team];
+
+  let attack = 0;
+  let midfield = 0;
+  let defense = 0;
+  let goalkeeper = 0;
+
+  let gp = 0;
+  let df = 0;
+  let md = 0;
+  let dl = 0;
+
+  squad.forEach(player => {
+
+    attack += player.attack;
+    midfield += player.midfield;
+    defense += player.defense;
+
+    if (
+      player.pos === "GP"
+    ) {
+
+      goalkeeper =
+        Math.max(
+          goalkeeper,
+          player.goalkeeping
+        );
+
+      gp++;
+
+    }
+
+    if (player.pos === "DF") {
+      df++;
+    }
+
+    if (player.pos === "MD") {
+      md++;
+    }
+
+    if (player.pos === "DL") {
+      dl++;
+    }
+
+  });
+
+  attack /= 5;
+  midfield /= 5;
+  defense /= 5;
+
+if (gp === 0) {
+  goalkeeper = 10;
+  defense -= 30;
+}
+
+  if (gp > 1) {
+    attack -= 10 * (gp - 1);
+    midfield -= 8 * (gp - 1);
+  }
+
+  if (df === 0) {
+    defense -= 18;
+  }
+
+  if (md === 0) {
+    midfield -= 17;
+  }
+
+  if (dl === 0) {
+    attack -= 20;
+  }
+
+  if (dl >= 4) {
+    defense -= 18;
+    midfield -= 10;
+  }
+
+  if (df >= 4) {
+    attack -= 18;
+    midfield -= 8;
+  }
+
+  let balanceBonus = 0;
+
+  if (
+    gp >= 1 &&
+    df >= 1 &&
+    md >= 1 &&
+    dl >= 1
+  ) {
+
+    balanceBonus = 6;
+
+  }
+
+  attack += balanceBonus;
+  midfield += balanceBonus;
+  defense += balanceBonus;
+
+  attack =
+    clamp(attack,20,99);
+
+  midfield =
+    clamp(midfield,20,99);
+
+  defense =
+    clamp(defense,20,99);
+
+  goalkeeper =
+    clamp(goalkeeper,20,99);
+
+  const overall =
+    attack * .30 +
+    midfield * .25 +
+    defense * .25 +
+    goalkeeper * .20;
+
+  return {
+
+    attack,
+    midfield,
+    defense,
+    goalkeeper,
+    overall,
+
+    positions:{
+      gp,
+      df,
+      md,
+      dl
+    }
+
+  };
+
+}
+
+
+
+function simulateGoals(expected) {
+
+  expected =
+    clamp(
+      expected,
+      .4,
+      5.5
+    );
+
+  let goals = 0;
+
+  for (
+    let i=0;
+    i<7;
+    i++
+  ) {
+
+    const chance =
+      expected / 7;
+
+    if (
+      Math.random() <
+      chance / 1.8
+    ) {
+
+      goals++;
+
+    }
+
+  }
+
+  return goals;
+
+}
+
+
+
+function playMatch() {
+
+  if (
+    teams.A.length !== 5 ||
+    teams.B.length !== 5
+  ) {
+    return;
+  }
+
+  const A =
+    calculateTeam("A");
+
+  const B =
+    calculateTeam("B");
+
+  const attackA =
+    A.attack * .55 +
+    A.midfield * .30 +
+    A.overall * .15;
+
+  const attackB =
+    B.attack * .55 +
+    B.midfield * .30 +
+    B.overall * .15;
+
+  const resistanceA =
+    A.defense * .60 +
+    A.goalkeeper * .40;
+
+  const resistanceB =
+    B.defense * .60 +
+    B.goalkeeper * .40;
+
+  const chanceA =
+    1.75 +
+    (
+      attackA -
+      resistanceB
+    ) / 15;
+
+  const chanceB =
+    1.75 +
+    (
+      attackB -
+      resistanceA
+    ) / 15;
+
+  const goalsA =
+    simulateGoals(chanceA);
+
+  const goalsB =
+    simulateGoals(chanceB);
+
+  const difference =
+    A.overall -
+    B.overall;
+
+  let winA =
+    45 +
+    difference * 2;
+
+  let winB =
+    45 -
+    difference * 2;
+
+  let draw = 10;
+
+  winA =
+    clamp(winA,10,80);
+
+  winB =
+    clamp(winB,10,80);
+
+  const total =
+    winA +
+    winB +
+    draw;
+
+  winA =
+    Math.round(
+      winA /
+      total *
+      100
+    );
+
+  winB =
+    Math.round(
+      winB /
+      total *
+      100
+    );
+
+  draw =
+    100 -
+    winA -
+    winB;
+
+  document.getElementById("resultCard")
+    .classList.remove("hidden");
+
+  document.getElementById("score").textContent =
+    goalsA +
+    " - " +
+    goalsB;
+
+  if (goalsA > goalsB) {
+
+    document.getElementById("winnerText").textContent =
+      "🏆 GANADOR: EQUIPO A";
+
+  } else if (goalsB > goalsA) {
+
+    document.getElementById("winnerText").textContent =
+      "🏆 GANADOR: EQUIPO B";
+
+  } else {
+
+    document.getElementById("winnerText").textContent =
+      "🤝 EMPATE";
+
+  }
+
+  document.getElementById("attackStats").textContent =
+    Math.round(A.attack) +
+    " / " +
+    Math.round(B.attack);
+
+  document.getElementById("midStats").textContent =
+    Math.round(A.midfield) +
+    " / " +
+    Math.round(B.midfield);
+
+  document.getElementById("defStats").textContent =
+    Math.round(A.defense) +
+    " / " +
+    Math.round(B.defense);
+
+  document.getElementById("gkStats").textContent =
+    Math.round(A.goalkeeper) +
+    " / " +
+    Math.round(B.goalkeeper);
+
+  document.getElementById("probabilityText").textContent =
+    "Probabilidad de victoria — A: " +
+    winA +
+    "% | Empate: " +
+    draw +
+    "% | B: " +
+    winB +
+    "%";
+
+  document.getElementById("analysisText").textContent =
+    createAnalysis(A,B);
+
+  document.getElementById("resultCard")
+    .scrollIntoView({
+      behavior:"smooth"
+    });
+
+}
+
+
+
+function createAnalysis(A,B) {
+
+  const notes = [];
+
+  if (A.positions.gp === 0) {
+    notes.push(
+      "El Equipo A jugó sin arquero y sufrió una penalización defensiva importante."
+    );
+  }
+
+  if (B.positions.gp === 0) {
+    notes.push(
+      "El Equipo B jugó sin arquero y sufrió una penalización defensiva importante."
+    );
+  }
+
+  if (A.positions.df === 0) {
+    notes.push(
+      "El Equipo A apostó por un esquema sin defensores, muy ofensivo pero vulnerable."
+    );
+  }
+
+  if (B.positions.df === 0) {
+    notes.push(
+      "El Equipo B apostó por un esquema sin defensores, muy ofensivo pero vulnerable."
+    );
+  }
+
+  if (A.positions.dl >= 4) {
+    notes.push(
+      "El Equipo A acumuló demasiados delanteros y perdió equilibrio."
+    );
+  }
+
+  if (B.positions.dl >= 4) {
+    notes.push(
+      "El Equipo B acumuló demasiados delanteros y perdió equilibrio."
+    );
+  }
+
+  if (
+    A.attack >
+    B.attack + 8
+  ) {
+    notes.push(
+      "El Equipo A tuvo una clara ventaja ofensiva."
+    );
+  }
+
+  if (
+    B.attack >
+    A.attack + 8
+  ) {
+    notes.push(
+      "El Equipo B tuvo una clara ventaja ofensiva."
+    );
+  }
+
+  if (
+    A.midfield >
+    B.midfield + 8
+  ) {
+    notes.push(
+      "El Equipo A dominó especialmente el mediocampo."
+    );
+  }
+
+  if (
+    B.midfield >
+    A.midfield + 8
+  ) {
+    notes.push(
+      "El Equipo B dominó especialmente el mediocampo."
+    );
+  }
+
+  if (
+    A.defense >
+    B.defense + 8
+  ) {
+    notes.push(
+      "El Equipo A presentó una estructura defensiva superior."
+    );
+  }
+
+  if (
+    B.defense >
+    A.defense + 8
+  ) {
+    notes.push(
+      "El Equipo B presentó una estructura defensiva superior."
+    );
+  }
+
+  if (
+    notes.length === 0
+  ) {
+    notes.push(
+      "Los dos equipos quedaron bastante parejos y el partido podía decidirse por pequeños detalles."
+    );
+  }
+
+  return notes.join(" ");
+
+}
+
+
+
+function resetGame() {
+
+  money = {
+    A:20,
+    B:20
+  };
+
+  teams = {
+    A:[],
+    B:[]
+  };
+
+  usedPlayers = [];
+
+  currentPlayer = null;
+
+  firstBidder = "A";
+  currentBidder = "A";
+
+  leader = null;
+
+  currentBid = 0;
+  selectedBid = 1;
+
+  auctionActive = false;
+
+  openedMiniTeam = null;
+
+  zeroBidPasses = 0;
+
+  forceOpeningBid = false;
+
+  closeMiniTeam();
+
+  document.getElementById("playerName").textContent =
+    "CARGANDO...";
+
+  document.getElementById("playerPosition").textContent =
+    "";
+
+  document.getElementById("positionCircle").textContent =
+    "⚽";
+
+  document.getElementById("playerRating").textContent =
+    "";
+
+  document.getElementById("resultCard")
+    .classList.add("hidden");
+
+  showMessage(
+    "Nueva partida iniciada."
+  );
+
+  updateScreen();
+
+  setTimeout(
+    () => {
+      nextPlayer();
+    },
+    500
+  );
+
+}
+
+
+
+updateScreen();
+
+setTimeout(
+  () => {
+    nextPlayer();
+  },
+  500
+);
+
+</script>
+
+</body>
+</html>
