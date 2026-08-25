@@ -235,13 +235,36 @@ header p{
 }
 
 .turn-badge{
-  background:rgba(0,0,0,.36);
-  color:#d6ff91;
-  border-radius:30px;
-  padding:9px 11px;
+  border-radius:14px;
+  padding:10px 14px;
   font-size:10px;
-  font-weight:bold;
+  font-weight:900;
   white-space:nowrap;
+  transition:
+    background .25s ease,
+    color .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+/* TURNO EQUIPO A */
+.turn-badge.turn-a-badge{
+  background:#0d5fa8;
+  color:#ffffff;
+  border:2px solid #63b7ff;
+  box-shadow:
+    0 0 0 3px rgba(55,155,255,.15),
+    0 0 18px rgba(55,155,255,.40);
+}
+
+/* TURNO EQUIPO B */
+.turn-badge.turn-b-badge{
+  background:#a51f32;
+  color:#ffffff;
+  border:2px solid #ff7182;
+  box-shadow:
+    0 0 0 3px rgba(255,70,90,.15),
+    0 0 18px rgba(255,70,90,.40);
 }
 
 .mini-team{
@@ -1285,11 +1308,35 @@ function updateScreen(){
 
   }
 
+const turnBadge =
   document.getElementById(
     "turnBadge"
-  ).textContent=
-    "TURNO DE OFERTAR: "+
-    currentBidder;
+  );
+
+turnBadge.classList.remove(
+  "turn-a-badge",
+  "turn-b-badge"
+);
+
+if(currentBidder === "A"){
+
+  turnBadge.classList.add(
+    "turn-a-badge"
+  );
+
+  turnBadge.innerHTML =
+    "🔵 TURNO DE OFERTAR: A";
+
+}else{
+
+  turnBadge.classList.add(
+    "turn-b-badge"
+  );
+
+  turnBadge.innerHTML =
+    "🔴 TURNO DE OFERTAR: B";
+
+}
 
 
   const phaseBadge=
