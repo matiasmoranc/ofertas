@@ -939,197 +939,99 @@ const firebaseConfig = {
 
 const players = [
 
-/* =========================
-   GP
-========================= */
+/* GP */
 
 {name:"Thibaut Courtois",pos:"GP",rating:94,attack:20,midfield:30,defense:45,goalkeeping:97},
 {name:"Alisson Becker",pos:"GP",rating:92,attack:18,midfield:35,defense:44,goalkeeping:95},
-{name:"Gianluigi Donnarumma",pos:"GP",rating:93,attack:17,midfield:30,defense:43,goalkeeping:96},
-{name:"Emiliano Martínez",pos:"GP",rating:92,attack:18,midfield:30,defense:45,goalkeeping:95},
-{name:"Ederson",pos:"GP",rating:89,attack:22,midfield:46,defense:42,goalkeeping:91},
-{name:"Jan Oblak",pos:"GP",rating:90,attack:16,midfield:27,defense:43,goalkeeping:93},
-{name:"Mike Maignan",pos:"GP",rating:90,attack:19,midfield:38,defense:43,goalkeeping:93},
-{name:"Manuel Neuer",pos:"GP",rating:87,attack:25,midfield:44,defense:45,goalkeeping:89},
-{name:"Marc-André ter Stegen",pos:"GP",rating:87,attack:20,midfield:41,defense:40,goalkeeping:89},
-{name:"David de Gea",pos:"GP",rating:86,attack:15,midfield:25,defense:38,goalkeeping:90},
-{name:"André Onana",pos:"GP",rating:83,attack:20,midfield:40,defense:38,goalkeeping:85},
-{name:"Jordan Pickford",pos:"GP",rating:86,attack:18,midfield:35,defense:39,goalkeeping:89},
-{name:"David Raya",pos:"GP",rating:91,attack:20,midfield:41,defense:42,goalkeeping:94},
-{name:"Diogo Costa",pos:"GP",rating:89,attack:19,midfield:40,defense:41,goalkeeping:92},
-{name:"Gregor Kobel",pos:"GP",rating:89,attack:17,midfield:31,defense:42,goalkeeping:92},
-{name:"Yann Sommer",pos:"GP",rating:87,attack:18,midfield:39,defense:39,goalkeeping:90},
-{name:"Wojciech Szczęsny",pos:"GP",rating:85,attack:16,midfield:29,defense:40,goalkeeping:88},
-{name:"Unai Simón",pos:"GP",rating:87,attack:19,midfield:38,defense:41,goalkeeping:90},
-{name:"Guglielmo Vicario",pos:"GP",rating:84,attack:18,midfield:35,defense:39,goalkeeping:87},
-{name:"Lucas Chevalier",pos:"GP",rating:86,attack:17,midfield:35,defense:39,goalkeeping:89},
-{name:"Giorgi Mamardashvili",pos:"GP",rating:86,attack:16,midfield:30,defense:42,goalkeeping:90},
-{name:"Andriy Lunin",pos:"GP",rating:82,attack:16,midfield:29,defense:38,goalkeeping:85},
-{name:"Bernd Leno",pos:"GP",rating:81,attack:16,midfield:31,defense:38,goalkeeping:84},
-{name:"Kepa Arrizabalaga",pos:"GP",rating:79,attack:17,midfield:34,defense:36,goalkeeping:82},
+{name:"Gianluigi Donnarumma",pos:"GP",rating:91,attack:17,midfield:28,defense:42,goalkeeping:94},
+{name:"Emiliano Martínez",pos:"GP",rating:90,attack:18,midfield:29,defense:44,goalkeeping:93},
+{name:"Ederson",pos:"GP",rating:89,attack:22,midfield:44,defense:42,goalkeeping:91},
+{name:"Jan Oblak",pos:"GP",rating:89,attack:16,midfield:27,defense:43,goalkeeping:92},
+{name:"Mike Maignan",pos:"GP",rating:88,attack:19,midfield:36,defense:42,goalkeeping:90},
+{name:"Manuel Neuer",pos:"GP",rating:87,attack:25,midfield:43,defense:45,goalkeeping:89},
+{name:"Marc-André ter Stegen",pos:"GP",rating:86,attack:20,midfield:40,defense:40,goalkeeping:88},
+{name:"David de Gea",pos:"GP",rating:85,attack:15,midfield:25,defense:38,goalkeeping:88},
+{name:"André Onana",pos:"GP",rating:82,attack:20,midfield:39,defense:38,goalkeeping:84},
+{name:"Jordan Pickford",pos:"GP",rating:81,attack:18,midfield:34,defense:37,goalkeeping:83},
 
-
-/* =========================
-   DF
-========================= */
+/* DF */
 
 {name:"Virgil van Dijk",pos:"DF",rating:94,attack:53,midfield:69,defense:97,goalkeeping:10},
 {name:"Rúben Dias",pos:"DF",rating:91,attack:45,midfield:66,defense:94,goalkeeping:10},
-{name:"William Saliba",pos:"DF",rating:93,attack:48,midfield:72,defense:96,goalkeeping:10},
+{name:"William Saliba",pos:"DF",rating:91,attack:46,midfield:69,defense:93,goalkeeping:10},
 {name:"Antonio Rüdiger",pos:"DF",rating:90,attack:48,midfield:63,defense:92,goalkeeping:10},
-{name:"Achraf Hakimi",pos:"DF",rating:94,attack:87,midfield:88,defense:88,goalkeeping:10},
-{name:"Theo Hernández",pos:"DF",rating:90,attack:84,midfield:79,defense:84,goalkeeping:10},
-{name:"Alessandro Bastoni",pos:"DF",rating:91,attack:53,midfield:82,defense:94,goalkeeping:10},
-{name:"Marquinhos",pos:"DF",rating:87,attack:48,midfield:72,defense:89,goalkeeping:10},
-{name:"Ronald Araújo",pos:"DF",rating:89,attack:48,midfield:64,defense:94,goalkeeping:10},
-{name:"Gabriel Magalhães",pos:"DF",rating:91,attack:56,midfield:66,defense:95,goalkeeping:10},
-{name:"Trent Alexander-Arnold",pos:"DF",rating:89,attack:80,midfield:94,defense:77,goalkeeping:10},
-{name:"Joško Gvardiol",pos:"DF",rating:90,attack:73,midfield:81,defense:91,goalkeeping:10},
-{name:"Jules Koundé",pos:"DF",rating:89,attack:65,midfield:77,defense:91,goalkeeping:10},
-{name:"Éder Militão",pos:"DF",rating:88,attack:50,midfield:66,defense:92,goalkeeping:10},
-{name:"Lisandro Martínez",pos:"DF",rating:85,attack:55,midfield:75,defense:87,goalkeeping:10},
-{name:"Kyle Walker",pos:"DF",rating:80,attack:65,midfield:69,defense:80,goalkeeping:10},
+{name:"Achraf Hakimi",pos:"DF",rating:91,attack:83,midfield:83,defense:85,goalkeeping:10},
+{name:"Theo Hernández",pos:"DF",rating:90,attack:82,midfield:78,defense:84,goalkeeping:10},
+{name:"Alessandro Bastoni",pos:"DF",rating:89,attack:51,midfield:76,defense:91,goalkeeping:10},
+{name:"Marquinhos",pos:"DF",rating:88,attack:48,midfield:72,defense:90,goalkeeping:10},
+{name:"Ronald Araújo",pos:"DF",rating:88,attack:48,midfield:62,defense:92,goalkeeping:10},
+{name:"Gabriel Magalhães",pos:"DF",rating:88,attack:51,midfield:63,defense:91,goalkeeping:10},
+{name:"Trent Alexander-Arnold",pos:"DF",rating:87,attack:77,midfield:91,defense:76,goalkeeping:10},
+{name:"Joško Gvardiol",pos:"DF",rating:87,attack:70,midfield:78,defense:87,goalkeeping:10},
+{name:"Jules Koundé",pos:"DF",rating:86,attack:62,midfield:74,defense:88,goalkeeping:10},
+{name:"Éder Militão",pos:"DF",rating:86,attack:50,midfield:65,defense:89,goalkeeping:10},
+{name:"Lisandro Martínez",pos:"DF",rating:84,attack:55,midfield:73,defense:86,goalkeeping:10},
+{name:"Kyle Walker",pos:"DF",rating:83,attack:68,midfield:72,defense:83,goalkeeping:10},
 {name:"Andrew Robertson",pos:"DF",rating:82,attack:70,midfield:77,defense:81,goalkeeping:10},
-{name:"Harry Maguire",pos:"DF",rating:81,attack:50,midfield:59,defense:84,goalkeeping:10},
-{name:"Sergio Ramos",pos:"DF",rating:77,attack:60,midfield:63,defense:80,goalkeeping:10},
-{name:"Mats Hummels",pos:"DF",rating:76,attack:44,midfield:64,defense:79,goalkeeping:10},
+{name:"Harry Maguire",pos:"DF",rating:80,attack:48,midfield:58,defense:83,goalkeeping:10},
+{name:"Sergio Ramos",pos:"DF",rating:79,attack:62,midfield:65,defense:82,goalkeeping:10},
+{name:"Mats Hummels",pos:"DF",rating:78,attack:45,midfield:66,defense:81,goalkeeping:10},
 
-{name:"Pau Cubarsí",pos:"DF",rating:92,attack:49,midfield:84,defense:93,goalkeeping:10},
-{name:"Nuno Mendes",pos:"DF",rating:92,attack:85,midfield:84,defense:88,goalkeeping:10},
-{name:"Ibrahima Konaté",pos:"DF",rating:89,attack:47,midfield:65,defense:93,goalkeeping:10},
-{name:"Cristian Romero",pos:"DF",rating:89,attack:54,midfield:69,defense:92,goalkeeping:10},
-{name:"Dayot Upamecano",pos:"DF",rating:87,attack:48,midfield:70,defense:89,goalkeeping:10},
-{name:"Bremer",pos:"DF",rating:88,attack:45,midfield:61,defense:92,goalkeeping:10},
-{name:"Jonathan Tah",pos:"DF",rating:87,attack:50,midfield:67,defense:90,goalkeeping:10},
-{name:"Benjamin Pavard",pos:"DF",rating:85,attack:59,midfield:72,defense:87,goalkeeping:10},
-{name:"Alphonso Davies",pos:"DF",rating:88,attack:83,midfield:82,defense:82,goalkeeping:10},
-{name:"Jeremie Frimpong",pos:"DF",rating:88,attack:86,midfield:83,defense:76,goalkeeping:10},
-{name:"Federico Dimarco",pos:"DF",rating:89,attack:82,midfield:87,defense:83,goalkeeping:10},
-{name:"Alejandro Balde",pos:"DF",rating:85,attack:80,midfield:78,defense:81,goalkeeping:10},
-{name:"Pedro Porro",pos:"DF",rating:84,attack:78,midfield:83,defense:79,goalkeeping:10},
-{name:"Marc Cucurella",pos:"DF",rating:86,attack:71,midfield:79,defense:86,goalkeeping:10},
-{name:"Dean Huijsen",pos:"DF",rating:87,attack:54,midfield:77,defense:89,goalkeeping:10},
-{name:"Murillo",pos:"DF",rating:85,attack:49,midfield:67,defense:88,goalkeeping:10},
-{name:"Kim Min-jae",pos:"DF",rating:84,attack:46,midfield:65,defense:87,goalkeeping:10},
-{name:"Nathan Aké",pos:"DF",rating:83,attack:56,midfield:71,defense:85,goalkeeping:10},
-{name:"Matthijs de Ligt",pos:"DF",rating:84,attack:50,midfield:66,defense:87,goalkeeping:10},
-{name:"Aymeric Laporte",pos:"DF",rating:79,attack:48,midfield:69,defense:82,goalkeeping:10},
+/* MD */
 
+{name:"Rodri",pos:"MD",rating:95,attack:74,midfield:97,defense:91,goalkeeping:10},
+{name:"Jude Bellingham",pos:"MD",rating:94,attack:88,midfield:96,defense:82,goalkeeping:10},
+{name:"Federico Valverde",pos:"MD",rating:92,attack:82,midfield:93,defense:84,goalkeeping:10},
+{name:"Pedri",pos:"MD",rating:91,attack:76,midfield:95,defense:68,goalkeeping:10},
+{name:"Kevin De Bruyne",pos:"MD",rating:92,attack:87,midfield:96,defense:61,goalkeeping:10},
+{name:"Vitinha",pos:"MD",rating:91,attack:80,midfield:94,defense:72,goalkeeping:10},
+{name:"Florian Wirtz",pos:"MD",rating:90,attack:88,midfield:94,defense:56,goalkeeping:10},
+{name:"Jamal Musiala",pos:"MD",rating:90,attack:89,midfield:94,defense:55,goalkeeping:10},
+{name:"Declan Rice",pos:"MD",rating:89,attack:72,midfield:88,defense:90,goalkeeping:10},
+{name:"Martin Ødegaard",pos:"MD",rating:89,attack:84,midfield:93,defense:62,goalkeeping:10},
+{name:"Bruno Fernandes",pos:"MD",rating:88,attack:87,midfield:91,defense:61,goalkeeping:10},
+{name:"Frenkie de Jong",pos:"MD",rating:87,attack:75,midfield:91,defense:74,goalkeeping:10},
+{name:"Alexis Mac Allister",pos:"MD",rating:87,attack:80,midfield:90,defense:74,goalkeeping:10},
+{name:"Nicolò Barella",pos:"MD",rating:87,attack:80,midfield:89,defense:79,goalkeeping:10},
+{name:"Bernardo Silva",pos:"MD",rating:87,attack:83,midfield:91,defense:63,goalkeeping:10},
+{name:"Enzo Fernández",pos:"MD",rating:85,attack:76,midfield:87,defense:73,goalkeeping:10},
+{name:"Luka Modrić",pos:"MD",rating:84,attack:75,midfield:90,defense:67,goalkeeping:10},
+{name:"Casemiro",pos:"MD",rating:81,attack:65,midfield:77,defense:85,goalkeeping:10},
+{name:"Paul Pogba",pos:"MD",rating:79,attack:76,midfield:84,defense:65,goalkeeping:10},
+{name:"Christian Eriksen",pos:"MD",rating:77,attack:73,midfield:83,defense:51,goalkeeping:10},
 
-/* =========================
-   MD
-========================= */
+/* DL */
 
-{name:"Rodri",pos:"MD",rating:97,attack:78,midfield:99,defense:94,goalkeeping:10},
-{name:"Jude Bellingham",pos:"MD",rating:95,attack:91,midfield:97,defense:84,goalkeeping:10},
-{name:"Federico Valverde",pos:"MD",rating:94,attack:84,midfield:96,defense:87,goalkeeping:10},
-{name:"Pedri",pos:"MD",rating:94,attack:80,midfield:98,defense:72,goalkeeping:10},
-{name:"Kevin De Bruyne",pos:"MD",rating:89,attack:85,midfield:94,defense:59,goalkeeping:10},
-{name:"Vitinha",pos:"MD",rating:95,attack:83,midfield:98,defense:77,goalkeeping:10},
-{name:"Florian Wirtz",pos:"MD",rating:93,attack:91,midfield:96,defense:59,goalkeeping:10},
-{name:"Jamal Musiala",pos:"MD",rating:93,attack:92,midfield:96,defense:57,goalkeeping:10},
-{name:"Declan Rice",pos:"MD",rating:94,attack:78,midfield:93,defense:95,goalkeeping:10},
-{name:"Martin Ødegaard",pos:"MD",rating:90,attack:85,midfield:95,defense:64,goalkeeping:10},
-{name:"Bruno Fernandes",pos:"MD",rating:89,attack:88,midfield:93,defense:62,goalkeeping:10},
-{name:"Frenkie de Jong",pos:"MD",rating:90,attack:76,midfield:95,defense:77,goalkeeping:10},
-{name:"Alexis Mac Allister",pos:"MD",rating:91,attack:82,midfield:94,defense:78,goalkeeping:10},
-{name:"Nicolò Barella",pos:"MD",rating:90,attack:82,midfield:93,defense:82,goalkeeping:10},
-{name:"Bernardo Silva",pos:"MD",rating:88,attack:82,midfield:92,defense:64,goalkeeping:10},
-{name:"Enzo Fernández",pos:"MD",rating:88,attack:79,midfield:91,defense:77,goalkeeping:10},
-{name:"Luka Modrić",pos:"MD",rating:84,attack:74,midfield:90,defense:66,goalkeeping:10},
-{name:"Casemiro",pos:"MD",rating:80,attack:64,midfield:76,defense:84,goalkeeping:10},
-{name:"Paul Pogba",pos:"MD",rating:77,attack:75,midfield:82,defense:62,goalkeeping:10},
-{name:"Christian Eriksen",pos:"MD",rating:75,attack:71,midfield:81,defense:49,goalkeeping:10},
-
-{name:"Joshua Kimmich",pos:"MD",rating:92,attack:77,midfield:96,defense:86,goalkeeping:10},
-{name:"Fabián Ruiz",pos:"MD",rating:92,attack:83,midfield:95,defense:79,goalkeeping:10},
-{name:"Moisés Caicedo",pos:"MD",rating:91,attack:70,midfield:91,defense:94,goalkeeping:10},
-{name:"Martín Zubimendi",pos:"MD",rating:90,attack:70,midfield:93,defense:89,goalkeeping:10},
-{name:"Aurélien Tchouaméni",pos:"MD",rating:89,attack:73,midfield:89,defense:91,goalkeeping:10},
-{name:"Eduardo Camavinga",pos:"MD",rating:88,attack:76,midfield:91,defense:87,goalkeeping:10},
-{name:"Gavi",pos:"MD",rating:89,attack:80,midfield:93,defense:82,goalkeeping:10},
-{name:"Xavi Simons",pos:"MD",rating:89,attack:87,midfield:93,defense:62,goalkeeping:10},
-{name:"Dominik Szoboszlai",pos:"MD",rating:89,attack:87,midfield:92,defense:69,goalkeeping:10},
-{name:"Ryan Gravenberch",pos:"MD",rating:90,attack:79,midfield:92,defense:87,goalkeeping:10},
-{name:"João Neves",pos:"MD",rating:91,attack:76,midfield:94,defense:88,goalkeeping:10},
-{name:"Warren Zaïre-Emery",pos:"MD",rating:87,attack:78,midfield:90,defense:82,goalkeeping:10},
-{name:"Sandro Tonali",pos:"MD",rating:88,attack:78,midfield:91,defense:85,goalkeeping:10},
-{name:"Manuel Locatelli",pos:"MD",rating:83,attack:68,midfield:86,defense:84,goalkeeping:10},
-{name:"Hakan Çalhanoğlu",pos:"MD",rating:87,attack:83,midfield:92,defense:75,goalkeeping:10},
-{name:"Dani Olmo",pos:"MD",rating:88,attack:88,midfield:92,defense:56,goalkeeping:10},
-{name:"Morgan Gibbs-White",pos:"MD",rating:84,attack:84,midfield:88,defense:62,goalkeeping:10},
-{name:"Conor Gallagher",pos:"MD",rating:81,attack:74,midfield:83,defense:82,goalkeeping:10},
-{name:"James Ward-Prowse",pos:"MD",rating:78,attack:73,midfield:87,defense:68,goalkeeping:10},
-{name:"Youri Tielemans",pos:"MD",rating:84,attack:79,midfield:88,defense:70,goalkeeping:10},
-
-
-/* =========================
-   DL
-========================= */
-
-{name:"Kylian Mbappé",pos:"DL",rating:98,attack:99,midfield:88,defense:35,goalkeeping:10},
-{name:"Erling Haaland",pos:"DL",rating:97,attack:99,midfield:74,defense:38,goalkeeping:10},
-{name:"Vinícius Jr.",pos:"DL",rating:96,attack:98,midfield:89,defense:37,goalkeeping:10},
-{name:"Lamine Yamal",pos:"DL",rating:98,attack:98,midfield:96,defense:46,goalkeeping:10},
-{name:"Mohamed Salah",pos:"DL",rating:94,attack:97,midfield:88,defense:43,goalkeeping:10},
-{name:"Harry Kane",pos:"DL",rating:98,attack:99,midfield:91,defense:46,goalkeeping:10},
-{name:"Ousmane Dembélé",pos:"DL",rating:96,attack:98,midfield:92,defense:43,goalkeeping:10},
-{name:"Bukayo Saka",pos:"DL",rating:94,attack:95,midfield:91,defense:50,goalkeeping:10},
-{name:"Lautaro Martínez",pos:"DL",rating:94,attack:96,midfield:81,defense:52,goalkeeping:10},
-{name:"Alexander Isak",pos:"DL",rating:94,attack:97,midfield:84,defense:41,goalkeeping:10},
-{name:"Raphinha",pos:"DL",rating:94,attack:96,midfield:91,defense:55,goalkeeping:10},
-{name:"Julián Álvarez",pos:"DL",rating:93,attack:95,midfield:88,defense:59,goalkeeping:10},
-{name:"Khvicha Kvaratskhelia",pos:"DL",rating:94,attack:96,midfield:91,defense:46,goalkeeping:10},
-{name:"Rodrygo",pos:"DL",rating:90,attack:92,midfield:88,defense:42,goalkeeping:10},
-{name:"Victor Osimhen",pos:"DL",rating:92,attack:97,midfield:74,defense:47,goalkeeping:10},
-{name:"Cole Palmer",pos:"DL",rating:93,attack:94,midfield:94,defense:48,goalkeeping:10},
-{name:"Son Heung-min",pos:"DL",rating:86,attack:90,midfield:81,defense:41,goalkeeping:10},
-{name:"Antoine Griezmann",pos:"DL",rating:86,attack:88,midfield:88,defense:56,goalkeeping:10},
-{name:"Luis Díaz",pos:"DL",rating:93,attack:95,midfield:86,defense:52,goalkeeping:10},
-{name:"Robert Lewandowski",pos:"DL",rating:87,attack:94,midfield:77,defense:43,goalkeeping:10},
-{name:"Marcus Rashford",pos:"DL",rating:82,attack:87,midfield:76,defense:40,goalkeeping:10},
-{name:"Darwin Núñez",pos:"DL",rating:81,attack:87,midfield:70,defense:48,goalkeeping:10},
-{name:"Cristiano Ronaldo",pos:"DL",rating:84,attack:92,midfield:74,defense:34,goalkeeping:10},
-{name:"Neymar Jr.",pos:"DL",rating:80,attack:84,midfield:88,defense:34,goalkeeping:10},
-{name:"Álvaro Morata",pos:"DL",rating:78,attack:82,midfield:70,defense:46,goalkeeping:10},
-{name:"Romelu Lukaku",pos:"DL",rating:81,attack:87,midfield:70,defense:46,goalkeeping:10},
-{name:"Raheem Sterling",pos:"DL",rating:76,attack:80,midfield:76,defense:42,goalkeeping:10},
-{name:"Timo Werner",pos:"DL",rating:74,attack:78,midfield:70,defense:41,goalkeeping:10},
-
-{name:"Michael Olise",pos:"DL",rating:95,attack:96,midfield:94,defense:47,goalkeeping:10},
-{name:"Viktor Gyökeres",pos:"DL",rating:93,attack:97,midfield:79,defense:52,goalkeeping:10},
-{name:"Désiré Doué",pos:"DL",rating:93,attack:94,midfield:92,defense:54,goalkeeping:10},
-{name:"Bradley Barcola",pos:"DL",rating:91,attack:94,midfield:88,defense:46,goalkeeping:10},
-{name:"Nico Williams",pos:"DL",rating:91,attack:94,midfield:89,defense:47,goalkeeping:10},
-{name:"Marcus Thuram",pos:"DL",rating:89,attack:93,midfield:79,defense:48,goalkeeping:10},
-{name:"Serhou Guirassy",pos:"DL",rating:91,attack:96,midfield:75,defense:45,goalkeeping:10},
-{name:"Ollie Watkins",pos:"DL",rating:88,attack:92,midfield:78,defense:50,goalkeeping:10},
-{name:"João Pedro",pos:"DL",rating:89,attack:91,midfield:86,defense:49,goalkeeping:10},
-{name:"Hugo Ekitiké",pos:"DL",rating:88,attack:92,midfield:82,defense:45,goalkeeping:10},
-{name:"Benjamin Šeško",pos:"DL",rating:87,attack:93,midfield:75,defense:43,goalkeeping:10},
-{name:"Samu Aghehowa",pos:"DL",rating:86,attack:92,midfield:70,defense:47,goalkeeping:10},
-{name:"Ademola Lookman",pos:"DL",rating:88,attack:92,midfield:84,defense:46,goalkeeping:10},
-{name:"Bryan Mbeumo",pos:"DL",rating:88,attack:91,midfield:84,defense:52,goalkeeping:10},
-{name:"Anthony Gordon",pos:"DL",rating:86,attack:90,midfield:83,defense:50,goalkeeping:10},
-{name:"Cody Gakpo",pos:"DL",rating:87,attack:91,midfield:84,defense:49,goalkeeping:10},
-{name:"Luis Suárez",pos:"DL",rating:78,attack:85,midfield:76,defense:42,goalkeeping:10},
-{name:"Lionel Messi",pos:"DL",rating:91,attack:94,midfield:96,defense:32,goalkeeping:10},
-{name:"Mikel Oyarzabal",pos:"DL",rating:90,attack:93,midfield:86,defense:52,goalkeeping:10},
-{name:"Ferran Torres",pos:"DL",rating:86,attack:90,midfield:81,defense:47,goalkeeping:10},
-{name:"Kingsley Coman",pos:"DL",rating:82,attack:87,midfield:82,defense:43,goalkeeping:10},
-{name:"Gabriel Martinelli",pos:"DL",rating:85,attack:90,midfield:82,defense:48,goalkeeping:10},
-{name:"Kaoru Mitoma",pos:"DL",rating:84,attack:89,midfield:84,defense:45,goalkeeping:10},
-{name:"Mohammed Kudus",pos:"DL",rating:85,attack:89,midfield:85,defense:53,goalkeeping:10},
-{name:"Jonathan David",pos:"DL",rating:85,attack:90,midfield:78,defense:45,goalkeeping:10},
-{name:"Dušan Vlahović",pos:"DL",rating:83,attack:89,midfield:72,defense:45,goalkeeping:10},
-{name:"Jean-Philippe Mateta",pos:"DL",rating:82,attack:88,midfield:70,defense:49,goalkeeping:10},
-{name:"Dominic Solanke",pos:"DL",rating:81,attack:87,midfield:73,defense:50,goalkeeping:10},
-{name:"Rasmus Højlund",pos:"DL",rating:79,attack:85,midfield:70,defense:45,goalkeeping:10},
-{name:"Jamie Vardy",pos:"DL",rating:75,attack:82,midfield:65,defense:40,goalkeeping:10}
+{name:"Kylian Mbappé",pos:"DL",rating:97,attack:99,midfield:85,defense:35,goalkeeping:10},
+{name:"Erling Haaland",pos:"DL",rating:96,attack:99,midfield:72,defense:38,goalkeeping:10},
+{name:"Vinícius Jr.",pos:"DL",rating:96,attack:98,midfield:87,defense:37,goalkeeping:10},
+{name:"Lamine Yamal",pos:"DL",rating:95,attack:96,midfield:90,defense:42,goalkeeping:10},
+{name:"Mohamed Salah",pos:"DL",rating:95,attack:98,midfield:87,defense:42,goalkeeping:10},
+{name:"Harry Kane",pos:"DL",rating:94,attack:97,midfield:85,defense:45,goalkeeping:10},
+{name:"Ousmane Dembélé",pos:"DL",rating:94,attack:96,midfield:88,defense:39,goalkeeping:10},
+{name:"Bukayo Saka",pos:"DL",rating:92,attack:93,midfield:88,defense:48,goalkeeping:10},
+{name:"Lautaro Martínez",pos:"DL",rating:92,attack:94,midfield:78,defense:49,goalkeeping:10},
+{name:"Alexander Isak",pos:"DL",rating:91,attack:95,midfield:80,defense:39,goalkeeping:10},
+{name:"Raphinha",pos:"DL",rating:91,attack:93,midfield:88,defense:51,goalkeeping:10},
+{name:"Julián Álvarez",pos:"DL",rating:90,attack:92,midfield:84,defense:55,goalkeeping:10},
+{name:"Khvicha Kvaratskhelia",pos:"DL",rating:90,attack:92,midfield:87,defense:43,goalkeeping:10},
+{name:"Rodrygo",pos:"DL",rating:89,attack:91,midfield:86,defense:41,goalkeeping:10},
+{name:"Victor Osimhen",pos:"DL",rating:89,attack:94,midfield:71,defense:45,goalkeeping:10},
+{name:"Cole Palmer",pos:"DL",rating:89,attack:91,midfield:89,defense:45,goalkeeping:10},
+{name:"Son Heung-min",pos:"DL",rating:88,attack:92,midfield:82,defense:42,goalkeeping:10},
+{name:"Antoine Griezmann",pos:"DL",rating:87,attack:89,midfield:88,defense:57,goalkeeping:10},
+{name:"Luis Díaz",pos:"DL",rating:87,attack:90,midfield:83,defense:49,goalkeeping:10},
+{name:"Robert Lewandowski",pos:"DL",rating:85,attack:91,midfield:76,defense:43,goalkeeping:10},
+{name:"Marcus Rashford",pos:"DL",rating:84,attack:88,midfield:77,defense:41,goalkeeping:10},
+{name:"Darwin Núñez",pos:"DL",rating:83,attack:88,midfield:70,defense:48,goalkeeping:10},
+{name:"Cristiano Ronaldo",pos:"DL",rating:83,attack:90,midfield:72,defense:34,goalkeeping:10},
+{name:"Neymar Jr.",pos:"DL",rating:82,attack:86,midfield:89,defense:35,goalkeeping:10},
+{name:"Álvaro Morata",pos:"DL",rating:80,attack:84,midfield:72,defense:47,goalkeeping:10},
+{name:"Romelu Lukaku",pos:"DL",rating:80,attack:85,midfield:68,defense:45,goalkeeping:10},
+{name:"Raheem Sterling",pos:"DL",rating:78,attack:82,midfield:78,defense:43,goalkeeping:10},
+{name:"Timo Werner",pos:"DL",rating:76,attack:80,midfield:72,defense:42,goalkeeping:10}
 
 ];
-
-
 
 const $ = id => document.getElementById(id);
 const lobbyScreen = $("lobbyScreen");
@@ -1407,11 +1309,30 @@ async function passBid(){
     const player=players[state.currentPlayerIndex];
 
     state.consecutivePasses = state.consecutivePasses || {A:0,B:0};
-    if((state.consecutivePasses[team] || 0) >= 3){
+
+    /* Si ya hay una oferta y este equipo no puede superarla,
+       el pase es obligatorio y SIEMPRE debe estar permitido,
+       aunque haya alcanzado el límite de 3 pases consecutivos. */
+    const maxAffordableBid = state.money[team] || 0;
+    const cannotOutbid = state.leader && maxAffordableBid <= state.currentBid;
+
+    if(!cannotOutbid && (state.consecutivePasses[team] || 0) >= 3){
       state.message="⚠️ Ya pasaste 3 veces consecutivas. Debés ofertar para volver a habilitar el pase.";
       return true;
     }
-    state.consecutivePasses[team]=(state.consecutivePasses[team] || 0)+1;
+
+    /* Solo contamos el pase para el límite cuando realmente tenía
+       la posibilidad de seguir compitiendo por el jugador. */
+    if(!cannotOutbid){
+      state.consecutivePasses[team]=(state.consecutivePasses[team] || 0)+1;
+    }
+
+    /* Si no puede superar la oferta actual, se adjudica inmediatamente
+       el jugador al líder y la partida continúa. */
+    if(cannotOutbid){
+      awardPaidInState(state,state.leader);
+      return true;
+    }
 
     if(bothTeamsBrokeState(state) && !state.leader && state.currentBid===0){
       const receiver=otherPlayer(team);
@@ -1640,7 +1561,7 @@ function renderPlayerValues(team){
         <tr>
           <td><strong>${player.name}</strong><br><span style="opacity:.55">${player.pos}</span></td>
           <td colspan="3" style="text-align:center;color:#9fb0a6;">GOLERO: <strong style="color:#ffd45c">${player.goalkeeping}</strong></td>
-          <td>${player.rating}</td>
+          <td>—</td>
         </tr>`;
     } else {
       rows += `
