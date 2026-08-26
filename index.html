@@ -61,10 +61,6 @@ header{
   margin-bottom:25px;
 }
 
-.ball{
-  font-size:44px;
-}
-
 header h1{
   margin:5px 0;
   font-size:38px;
@@ -646,14 +642,102 @@ header p{
   .lobby-card{padding:16px;}
   .connection-bar{flex-direction:column;align-items:flex-start;}
 }
+/* =========================
+   PLANTELES COMPACTOS EN JUEGO
+========================= */
+.live-squads{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+.live-squad{
+  min-width:0;
+  padding:9px;
+  border-radius:12px;
+  background:rgba(0,0,0,.28);
+  border:1px solid rgba(255,255,255,.10);
+  text-align:left;
+}
+.live-squad.a{border-color:rgba(99,183,255,.35);}
+.live-squad.b{border-color:rgba(255,113,130,.35);}
+.live-squad-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  margin-bottom:6px;
+  font-size:10px;
+  font-weight:900;
+}
+.live-squad-title span:last-child{
+  color:#aaff38;
+}
+.live-player{
+  display:grid;
+  grid-template-columns:27px minmax(0,1fr) auto;
+  align-items:center;
+  gap:5px;
+  min-height:30px;
+  padding:3px 0;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.live-player:first-child{border-top:0;}
+.live-pos{
+  width:25px;
+  height:25px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.08);
+  color:#ffd45c;
+  font-size:8px;
+  font-weight:900;
+}
+.live-name{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:9px;
+  font-weight:800;
+}
+.live-price{
+  font-size:8px;
+  color:#aaff38;
+  font-weight:900;
+}
+.live-empty{
+  padding:7px 0;
+  color:#718278;
+  font-size:9px;
+  text-align:center;
+}
+
+@media(max-width:850px){
+  .game > .team-card{display:none;}
+  .auction-card{padding:12px;}
+  .player-card{margin:10px 0;padding:14px 8px;}
+  .player-card h2{font-size:22px;margin:9px 0 4px;}
+  .position-circle{width:44px;height:44px;}
+  .current-bid{margin:10px 0;}
+  #currentBid{font-size:30px;}
+  .bid-controls{margin:9px 0;}
+  .bid-controls button{width:48px;height:48px;}
+  .message{min-height:44px;margin:9px 0;font-size:11px;}
+}
+
+@media(min-width:851px){
+  .live-squads{display:none;}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
-  <div class="ball">⚽</div>
-  <h1>MERCADO ÉLITE 5</h1>
-  <p>Subastá · Armá tu equipo · Jugá contra otro celular</p>
+  <h1>MERCADO ÉLITE 5 ⚽</h1>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -702,6 +786,19 @@ header p{
         <div class="turn-money team-b-money" id="teamBMoneyCard"><span>EQUIPO B 🔴</span><strong id="turnMoneyB">€20</strong><small>Ver equipo</small></div>
       </div>
 
+
+
+      <div id="liveSquads" class="live-squads">
+        <div class="live-squad a">
+          <div class="live-squad-title"><span>🔵 EQUIPO A</span><span id="liveMoneyA">€20</span></div>
+          <div id="liveTeamA"></div>
+        </div>
+        <div class="live-squad b">
+          <div class="live-squad-title"><span>🔴 EQUIPO B</span><span id="liveMoneyB">€20</span></div>
+          <div id="liveTeamB"></div>
+        </div>
+      </div>
+
       <div id="miniTeam" class="mini-team hidden">
         <div class="mini-team-header"><strong id="miniTeamTitle">EQUIPO</strong><button id="closeMiniTeamButton" type="button">✕</button></div>
         <div id="miniTeamPlayers"></div>
@@ -711,7 +808,6 @@ header p{
       <div class="player-card">
         <div id="positionCircle" class="position-circle">⚽</div>
         <h2 id="playerName">ESPERANDO...</h2>
-        <div id="playerPosition" class="player-position"></div>
       </div>
 
       <div class="current-bid">
@@ -970,6 +1066,7 @@ function freshGameState(code, playerAUid, playerBUid=null, seed=(Date.now()>>>0)
     leader: null,
     currentBid: 0,
     zeroBidPasses: 0,
+    consecutivePasses: {A:0,B:0},
     forceOpeningBid: false,
     goalkeeperPhase: true,
     rngSeed: seed,
@@ -1133,6 +1230,8 @@ async function makeBid(){
     state.currentBid=amount;
     state.leader=team;
     state.zeroBidPasses=0;
+    state.consecutivePasses = state.consecutivePasses || {A:0,B:0};
+    state.consecutivePasses[team]=0;
     state.forceOpeningBid=false;
     const opponent=otherPlayer(team);
     if((state.money[opponent]===0 && !teamIsFullState(state,opponent)) || teamIsFullState(state,opponent)){
@@ -1152,6 +1251,13 @@ async function passBid(){
     if(state.currentBidder!==team || state.currentPlayerIndex===null) return false;
     const player=players[state.currentPlayerIndex];
 
+    state.consecutivePasses = state.consecutivePasses || {A:0,B:0};
+    if((state.consecutivePasses[team] || 0) >= 3){
+      state.message="⚠️ Ya pasaste 3 veces consecutivas. Debés ofertar para volver a habilitar el pase.";
+      return true;
+    }
+    state.consecutivePasses[team]=(state.consecutivePasses[team] || 0)+1;
+
     if(bothTeamsBrokeState(state) && !state.leader && state.currentBid===0){
       const receiver=otherPlayer(team);
       awardFreeInState(state,receiver,`🎁 Equipo ${team} pasa. ${player.name} va gratis al Equipo ${receiver}.`);
@@ -1168,9 +1274,9 @@ async function passBid(){
       const aHas=hasGoalkeeperState(state,"A");
       const bHas=hasGoalkeeperState(state,"B");
       if(aHas!==bHas && !state.leader && state.currentBid===0){
-        if(state.forceOpeningBid){ state.message="⚠️ Ya rechazaste el arquero anterior. Debés ofertar mínimo €1."; return true; }
-        state.forceOpeningBid=true;
-        finishAuctionInState(state,`🧤 Equipo ${team} rechaza a ${player.name}.`,true);
+        if((state.consecutivePasses?.[team] || 0) > 3){ state.message="⚠️ Ya pasaste 3 veces consecutivas. Debés ofertar mínimo €1."; return true; }
+        state.forceOpeningBid=false;
+        finishAuctionInState(state,`🧤 Equipo ${team} rechaza a ${player.name}.`,false);
         return true;
       }
       if(!aHas && !bHas && !state.leader && state.currentBid===0){
@@ -1180,8 +1286,8 @@ async function passBid(){
           state.message=`Equipo ${team} pasa. Equipo ${state.currentBidder} puede ofertar o pasar.`;
           return true;
         }
-        state.forceOpeningBid=true;
-        finishAuctionInState(state,`🧤 Los dos rechazaron a ${player.name}.`,true);
+        state.forceOpeningBid=false;
+        finishAuctionInState(state,`🧤 Los dos rechazaron a ${player.name}.`,false);
         return true;
       }
       if(state.leader){ awardPaidInState(state,state.leader); return true; }
@@ -1189,14 +1295,14 @@ async function passBid(){
 
     const opponent=otherPlayer(team);
     if(teamIsFullState(state,opponent) && !state.leader && state.currentBid===0){
-      if(state.forceOpeningBid){ state.message="⚠️ Ya pasaste al jugador anterior. Debés ofertar mínimo €1."; return true; }
-      state.forceOpeningBid=true;
-      finishAuctionInState(state,`⏭️ Equipo ${team} pasa por ${player.name}.`,true);
+      if((state.consecutivePasses?.[team] || 0) > 3){ state.message="⚠️ Ya pasaste 3 veces consecutivas. Debés ofertar mínimo €1."; return true; }
+      state.forceOpeningBid=false;
+      finishAuctionInState(state,`⏭️ Equipo ${team} pasa por ${player.name}.`,false);
       return true;
     }
 
-    if(state.forceOpeningBid && !state.leader && state.currentBid===0){
-      state.message="⚠️ No podés pasar. Debés ofertar mínimo €1.";
+    if((state.consecutivePasses?.[team] || 0) > 3 && !state.leader && state.currentBid===0){
+      state.message="⚠️ Ya pasaste 3 veces consecutivas. Debés ofertar mínimo €1.";
       return true;
     }
 
@@ -1207,8 +1313,8 @@ async function passBid(){
         state.message=`Equipo ${team} pasa. Equipo ${opponent} puede ofertar o pasar.`;
         return true;
       }
-      state.forceOpeningBid=true;
-      finishAuctionInState(state,`⏭️ Los dos pasan por ${player.name}.`,true);
+      state.forceOpeningBid=false;
+      finishAuctionInState(state,`⏭️ Los dos pasan por ${player.name}.`,false);
       return true;
     }
 
@@ -1319,6 +1425,26 @@ function renderTeam(team){
   }
 }
 
+
+function renderLiveTeam(team){
+  const container=$("liveTeam"+team);
+  if(!container) return;
+  container.innerHTML="";
+  const entries=teamEntries(gameState,team);
+  if(!entries.length){
+    container.innerHTML='<div class="live-empty">Sin jugadores todavía</div>';
+    return;
+  }
+  entries.forEach(entry=>{
+    const player=players[entry.playerIndex];
+    if(!player) return;
+    const row=document.createElement("div");
+    row.className="live-player";
+    row.innerHTML=`<div class="live-pos">${player.pos}</div><div class="live-name">${player.name}</div><div class="live-price">€${entry.price}</div>`;
+    container.appendChild(row);
+  });
+}
+
 function renderMiniTeam(team){
   $("miniTeamTitle").textContent="EQUIPO "+team;
   const container=$("miniTeamPlayers"); container.innerHTML="";
@@ -1362,11 +1488,13 @@ function updateScreen(){
   if(!gameState) return;
   $("moneyA").textContent="€"+gameState.money.A; $("moneyB").textContent="€"+gameState.money.B;
   $("turnMoneyA").textContent="€"+gameState.money.A; $("turnMoneyB").textContent="€"+gameState.money.B;
+  if($("liveMoneyA")) $("liveMoneyA").textContent="€"+gameState.money.A;
+  if($("liveMoneyB")) $("liveMoneyB").textContent="€"+gameState.money.B;
   renderTeam("A"); renderTeam("B");
+  renderLiveTeam("A"); renderLiveTeam("B");
 
   const player=playerByIndex(gameState.currentPlayerIndex);
   $("playerName").textContent=player?player.name:(gameState.status==="waiting"?"ESPERANDO RIVAL":"SIN JUGADOR");
-  $("playerPosition").textContent=player?getPositionName(player.pos):"";
   $("positionCircle").textContent=player?player.pos:"⚽";
   $("currentBid").textContent="€"+(gameState.currentBid||0);
   $("bidLeader").textContent=gameState.leader?`Equipo ${gameState.leader} tiene la mejor oferta`:"Sin ofertas";
