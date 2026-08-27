@@ -2089,17 +2089,23 @@ function updateScreen(){
     $("teamIntro").classList.add("hidden");
     $("matchAnimation").classList.add("hidden");
   } else {
-    if(teamIntroTimer){
-      clearTimeout(teamIntroTimer);
-      teamIntroTimer=null;
-    }
     if(autoMatchTimer){
       clearTimeout(autoMatchTimer);
       autoMatchTimer=null;
     }
-    if(!introVisible) $("gameArea").classList.remove("hidden");
-    if(!introVisible) $("teamIntro").classList.add("hidden");
-    $("matchAnimation").classList.add("hidden");
+
+    /* Si está corriendo la presentación inicial del equipo,
+       NO cancelamos su temporizador. Así desaparece sola
+       exactamente a los 2 segundos. */
+    if(introVisible){
+      $("gameArea").classList.add("hidden");
+      $("matchAnimation").classList.add("hidden");
+      $("resultCard").classList.add("hidden");
+    } else {
+      $("gameArea").classList.remove("hidden");
+      $("teamIntro").classList.add("hidden");
+      $("matchAnimation").classList.add("hidden");
+    }
   }
 
   const revengeButton=$("revengeButton");
