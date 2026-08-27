@@ -989,6 +989,83 @@ header p{
   .goal-scorers{grid-template-columns:1fr;}
 }
 
+
+.score-with-scorers{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:start;
+  gap:14px;
+  width:min(420px,100%);
+  margin:18px auto 22px;
+}
+.score-side{
+  min-width:0;
+  text-align:center;
+}
+.score-number{
+  font-size:62px;
+  line-height:.95;
+  font-weight:900;
+  color:#ffd054;
+}
+.score-dash{
+  font-size:54px;
+  line-height:.95;
+  font-weight:900;
+  color:#ffd054;
+}
+.score-scorers{
+  margin-top:8px;
+  min-height:15px;
+  color:#aab7b0;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.4;
+}
+.score-scorers:empty{display:none;}
+
+
+.team-intro{
+  max-width:800px;
+  margin:28px auto 0;
+  padding:46px 20px;
+  border-radius:22px;
+  background:rgba(7,20,14,.96);
+  border:1px solid rgba(255,255,255,.12);
+  text-align:center;
+}
+.team-intro-small{
+  color:#8d9c94;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:3px;
+}
+.team-intro-name{
+  margin-top:12px;
+  font-size:38px;
+  line-height:1.1;
+  font-weight:900;
+}
+.team-intro.blue .team-intro-name{color:#63b7ff;}
+.team-intro.red .team-intro-name{color:#ff7182;}
+.team-intro-ring{
+  width:72px;
+  height:72px;
+  margin:24px auto 0;
+  border-radius:50%;
+  border:3px solid currentColor;
+  animation:introPulse 1s ease-in-out infinite;
+}
+.team-intro.blue{color:#63b7ff;}
+.team-intro.red{color:#ff7182;}
+@keyframes introPulse{
+  0%,100%{transform:scale(.88);opacity:.3;}
+  50%{transform:scale(1.08);opacity:.85;}
+}
+@media(prefers-reduced-motion:reduce){
+  .team-intro-ring{animation:none;}
+}
+
 </style>
 </head>
 <body>
@@ -1051,7 +1128,7 @@ header p{
   <div id="gameArea" class="game">
     <section class="team-card">
       <div class="team-header">
-        <div><small>JUGADOR</small><h2>🔵 EQUIPO A</h2></div>
+        <div><small>JUGADOR</small><h2>🔵 EQUIPO AZUL</h2></div>
         <div class="budget"><small>PRESUPUESTO</small><strong id="moneyA">€20</strong></div>
       </div>
       <div id="teamA" class="squad"></div>
@@ -1059,20 +1136,20 @@ header p{
 
     <main class="auction-card">
       <div class="turn-row">
-        <div class="turn-money team-a-money" id="teamAMoneyCard"><span>🔵 EQUIPO A</span><strong id="turnMoneyA">€20</strong><small>Ver equipo</small></div>
+        <div class="turn-money team-a-money" id="teamAMoneyCard"><span>🔵 EQUIPO AZUL</span><strong id="turnMoneyA">€20</strong><small>Ver equipo</small></div>
         <div id="turnBadge" class="turn-badge">TURNO A</div>
-        <div class="turn-money team-b-money" id="teamBMoneyCard"><span>EQUIPO B 🔴</span><strong id="turnMoneyB">€20</strong><small>Ver equipo</small></div>
+        <div class="turn-money team-b-money" id="teamBMoneyCard"><span>EQUIPO ROJO 🔴</span><strong id="turnMoneyB">€20</strong><small>Ver equipo</small></div>
       </div>
 
 
 
       <div id="liveSquads" class="live-squads">
         <div class="live-squad a">
-          <div class="live-squad-title"><span>🔵 EQUIPO A</span><span id="liveMoneyA">€20</span></div>
+          <div class="live-squad-title"><span>🔵 EQUIPO AZUL</span><span id="liveMoneyA">€20</span></div>
           <div id="liveTeamA"></div>
         </div>
         <div class="live-squad b">
-          <div class="live-squad-title"><span>🔴 EQUIPO B</span><span id="liveMoneyB">€20</span></div>
+          <div class="live-squad-title"><span>🔴 EQUIPO ROJO</span><span id="liveMoneyB">€20</span></div>
           <div id="liveTeamB"></div>
         </div>
       </div>
@@ -1107,19 +1184,25 @@ header p{
 
     <section class="team-card">
       <div class="team-header">
-        <div><small>JUGADOR</small><h2>🔴 EQUIPO B</h2></div>
+        <div><small>JUGADOR</small><h2>🔴 EQUIPO ROJO</h2></div>
         <div class="budget"><small>PRESUPUESTO</small><strong id="moneyB">€20</strong></div>
       </div>
       <div id="teamB" class="squad"></div>
     </section>
   </div>
 
+  <section id="teamIntro" class="team-intro hidden" aria-live="polite">
+    <div class="team-intro-small">TU EQUIPO</div>
+    <div id="teamIntroName" class="team-intro-name">SOS EL EQUIPO</div>
+    <div class="team-intro-ring"></div>
+  </section>
+
   <section id="matchAnimation" class="match-animation hidden" aria-live="polite">
     <div class="match-animation-title">⚽ PARTIDO EN JUEGO</div>
     <h2>¡SE JUEGA EL PARTIDO!</h2>
     <div class="match-field">
-      <div class="match-team-a">🔵 EQUIPO A</div>
-      <div class="match-team-b">EQUIPO B 🔴</div>
+      <div class="match-team-a">🔵 AZUL</div>
+      <div class="match-team-b">ROJO 🔴</div>
       <div class="match-ball">⚽</div>
     </div>
     <div class="match-loading">Calculando el resultado<span class="match-dots"></span></div>
@@ -1127,7 +1210,17 @@ header p{
 
   <section id="resultCard" class="result-card hidden">
     <div class="result-title">RESULTADO</div>
-    <div id="score" class="score">0 - 0</div>
+    <div class="score-with-scorers">
+      <div class="score-side">
+        <div id="scoreA" class="score-number">0</div>
+        <div id="goalScorersA" class="score-scorers"></div>
+      </div>
+      <div class="score-dash">-</div>
+      <div class="score-side">
+        <div id="scoreB" class="score-number">0</div>
+        <div id="goalScorersB" class="score-scorers"></div>
+      </div>
+    </div>
     <div id="winnerText" class="winner-text"></div>
     <div class="stats-grid">
       <div class="stat-box"><span>ATAQUE</span><strong id="attackStats"></strong></div>
@@ -1136,24 +1229,14 @@ header p{
       <div class="stat-box"><span>ARQUERO</span><strong id="gkStats"></strong></div>
     </div>
     <div id="probabilityText" class="probability"></div>
-    <div class="goal-scorers">
-      <div class="goal-scorers-team a">
-        <strong>🔵 GOLES EQUIPO A</strong>
-        <div id="goalScorersA" class="goal-scorers-list">—</div>
-      </div>
-      <div class="goal-scorers-team b">
-        <strong>🔴 GOLES EQUIPO B</strong>
-        <div id="goalScorersB" class="goal-scorers-list">—</div>
-      </div>
-    </div>
 
     <div id="playerValuesWrap" class="player-values-wrap">
       <div class="player-values-team">
-        <h3>🔵 EQUIPO A — VALORES DE JUGADORES</h3>
+        <h3>🔵 EQUIPO AZUL — VALORES DE JUGADORES</h3>
         <div id="playerValuesA"></div>
       </div>
       <div class="player-values-team">
-        <h3>🔴 EQUIPO B — VALORES DE JUGADORES</h3>
+        <h3>🔴 EQUIPO ROJO — VALORES DE JUGADORES</h3>
         <div id="playerValuesB"></div>
       </div>
     </div>
@@ -1305,6 +1388,7 @@ let unsubscribeOpenRooms = null;
 let currentRoomIsOpen = false;
 const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
 let autoMatchTimer = null;
+let teamIntroTimer = null;
 
 function firebaseConfigured(){
   return Boolean(
@@ -1335,6 +1419,8 @@ function generateRoomCode(){
 }
 
 function otherPlayer(team){ return team === "A" ? "B" : "A"; }
+function teamName(team){ return team==="A" ? "AZUL" : "ROJO"; }
+function teamLabel(team){ return team==="A" ? "Equipo Azul" : "Equipo Rojo"; }
 function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
 function playerByIndex(index){ return Number.isInteger(index) ? players[index] : null; }
 function teamEntries(state, team){ return Array.isArray(state?.teams?.[team]) ? state.teams[team] : []; }
@@ -1400,7 +1486,7 @@ function awardFreeInState(state, team, eventText=""){
   if(index===null || index===undefined || teamIsFullState(state,team)) return;
   appendPlayer(state,team,index,0);
   if(state.goalkeeperPhase && goalkeeperPhaseCompleteState(state)) state.goalkeeperPhase=false;
-  finishAuctionInState(state,eventText || `🎁 ${players[index].name} va gratis al Equipo ${team}.`,false);
+  finishAuctionInState(state,eventText || `🎁 ${players[index].name} va gratis al ${teamLabel(team)}.`,false);
 }
 
 function awardPaidInState(state, winner){
@@ -1412,7 +1498,7 @@ function awardPaidInState(state, winner){
     state.goalkeeperPhase=false;
     state.forceOpeningBid=false;
   }
-  finishAuctionInState(state,`🏆 ${players[index].name} → Equipo ${winner} por €${state.currentBid}.`,false);
+  finishAuctionInState(state,`🏆 ${players[index].name} → ${teamLabel(winner)} por €${state.currentBid}.`,false);
 }
 
 function finishAuctionInState(state,eventText="",keepForceOpening=false){
@@ -1553,7 +1639,7 @@ async function makeBid(){
       awardPaidInState(state,team); return true;
     }
     state.currentBidder=opponent;
-    state.message=`💰 Equipo ${team} ofrece €${amount}. Equipo ${opponent} responde.`;
+    state.message=`💰 ${teamLabel(team)} ofrece €${amount}. ${teamLabel(opponent)} responde.`;
     return true;
   });
 }
@@ -1614,7 +1700,7 @@ async function passBid(){
         state.zeroBidPasses=(state.zeroBidPasses||0)+1;
         if(state.zeroBidPasses===1){
           state.currentBidder=otherPlayer(team);
-          state.message=`Equipo ${team} pasa. Equipo ${state.currentBidder} puede ofertar o pasar.`;
+          state.message=`${teamLabel(team)} pasa. ${teamLabel(state.currentBidder)} puede ofertar o pasar.`;
           return true;
         }
         state.forceOpeningBid=false;
@@ -1641,7 +1727,7 @@ async function passBid(){
       state.zeroBidPasses=(state.zeroBidPasses||0)+1;
       if(state.zeroBidPasses===1){
         state.currentBidder=opponent;
-        state.message=`Equipo ${team} pasa. Equipo ${opponent} puede ofertar o pasar.`;
+        state.message=`${teamLabel(team)} pasa. ${teamLabel(opponent)} puede ofertar o pasar.`;
         return true;
       }
       state.forceOpeningBid=false;
@@ -1770,6 +1856,10 @@ async function playMatch(){
 }
 
 async function resetGame(){
+  if(teamIntroTimer){
+    clearTimeout(teamIntroTimer);
+    teamIntroTimer=null;
+  }
   if(autoMatchTimer){
     clearTimeout(autoMatchTimer);
     autoMatchTimer=null;
@@ -1821,7 +1911,7 @@ function renderLiveTeam(team){
 }
 
 function renderMiniTeam(team){
-  $("miniTeamTitle").textContent="EQUIPO "+team;
+  $("miniTeamTitle").textContent="EQUIPO "+teamName(team);
   const container=$("miniTeamPlayers"); container.innerHTML="";
   const entries=teamEntries(gameState,team);
   if(!entries.length){container.innerHTML='<div class="mini-empty">Todavía no compró jugadores</div>';return;}
@@ -1893,17 +1983,27 @@ function renderResult(){
   const r=gameState?.result;
   if(!r){$("resultCard").classList.add("hidden");return;}
   $("resultCard").classList.remove("hidden");
-  $("score").textContent=`${r.goalsA} - ${r.goalsB}`;
-  $("winnerText").textContent=r.winner==="A"?"🏆 GANADOR: EQUIPO A":r.winner==="B"?"🏆 GANADOR: EQUIPO B":"🤝 EMPATE";
+  $("scoreA").textContent=r.goalsA;
+  $("scoreB").textContent=r.goalsB;
+  $("winnerText").textContent=r.winner==="A"?"🏆 GANADOR: AZUL":r.winner==="B"?"🏆 GANADOR: ROJO":"🤝 EMPATE";
   $("attackStats").textContent=`${Math.round(r.A.attack)} / ${Math.round(r.B.attack)}`;
   $("midStats").textContent=`${Math.round(r.A.midfield)} / ${Math.round(r.B.midfield)}`;
   $("defStats").textContent=`${Math.round(r.A.defense)} / ${Math.round(r.B.defense)}`;
   $("gkStats").textContent=`${Math.round(r.A.goalkeeper)} / ${Math.round(r.B.goalkeeper)}`;
   $("probabilityText").textContent=`Ventaja estimada — A: ${r.winA}% | Equilibrio: ${r.draw}% | B: ${r.winB}%`;
-  $("goalScorersA").textContent=formatGoalScorers(r.scorersA);
-  $("goalScorersB").textContent=formatGoalScorers(r.scorersB);
+  $("goalScorersA").textContent=r.goalsA ? formatGoalScorers(r.scorersA) : "";
+  $("goalScorersB").textContent=r.goalsB ? formatGoalScorers(r.scorersB) : "";
   renderPlayerValues("A");
   renderPlayerValues("B");
+}
+
+function updateTeamIntro(){
+  if(!myTeam) return;
+  const intro=$("teamIntro");
+  const name=$("teamIntroName");
+  const isBlue=myTeam==="A";
+  intro.className="team-intro "+(isBlue?"blue":"red");
+  name.textContent="SOS EL EQUIPO "+teamName(myTeam);
 }
 
 function updateScreen(){
@@ -1926,7 +2026,7 @@ function updateScreen(){
   const turnBadge=$("turnBadge");
   turnBadge.classList.remove("turn-a-badge","turn-b-badge");
   turnBadge.classList.add(gameState.currentBidder==="A"?"turn-a-badge":"turn-b-badge");
-  turnBadge.innerHTML=gameState.currentBidder==="A"?"🔵 TURNO DE OFERTAR: A":"🔴 TURNO DE OFERTAR: B";
+  turnBadge.innerHTML=gameState.currentBidder==="A"?"🔵 TURNO DE OFERTAR: AZUL":"🔴 TURNO DE OFERTAR: ROJO";
 
   const auctionKey=`${gameState.currentPlayerIndex}|${gameState.currentBid}|${gameState.currentBidder}`;
   if(auctionKey!==lastAuctionKey){
@@ -1963,35 +2063,54 @@ function updateScreen(){
 
   if(full && !hasResult){
     $("gameArea").classList.add("hidden");
-    $("matchAnimation").classList.remove("hidden");
     $("resultCard").classList.add("hidden");
+    updateTeamIntro();
 
-    if(!autoMatchTimer){
-      autoMatchTimer=setTimeout(async()=>{
-        autoMatchTimer=null;
-        await playMatch();
-      },2800);
+    if(!teamIntroTimer && !autoMatchTimer){
+      $("teamIntro").classList.remove("hidden");
+      $("matchAnimation").classList.add("hidden");
+
+      teamIntroTimer=setTimeout(()=>{
+        teamIntroTimer=null;
+        $("teamIntro").classList.add("hidden");
+        $("matchAnimation").classList.remove("hidden");
+
+        autoMatchTimer=setTimeout(async()=>{
+          autoMatchTimer=null;
+          await playMatch();
+        },2200);
+      },1800);
     }
   } else if(hasResult){
+    if(teamIntroTimer){
+      clearTimeout(teamIntroTimer);
+      teamIntroTimer=null;
+    }
     if(autoMatchTimer){
       clearTimeout(autoMatchTimer);
       autoMatchTimer=null;
     }
     $("gameArea").classList.add("hidden");
+    $("teamIntro").classList.add("hidden");
     $("matchAnimation").classList.add("hidden");
   } else {
+    if(teamIntroTimer){
+      clearTimeout(teamIntroTimer);
+      teamIntroTimer=null;
+    }
     if(autoMatchTimer){
       clearTimeout(autoMatchTimer);
       autoMatchTimer=null;
     }
     $("gameArea").classList.remove("hidden");
+    $("teamIntro").classList.add("hidden");
     $("matchAnimation").classList.add("hidden");
   }
 
   const revengeButton=$("revengeButton");
   if(revengeButton){
     revengeButton.disabled=myTeam!=="A";
-    revengeButton.textContent=myTeam==="A"?"🔄 REVANCHA":"ESPERANDO REVANCHA DEL EQUIPO A";
+    revengeButton.textContent=myTeam==="A"?"🔄 REVANCHA":"ESPERANDO REVANCHA DEL EQUIPO AZUL";
   }
 
   if(openedMiniTeam) renderMiniTeam(openedMiniTeam);
@@ -2307,7 +2426,7 @@ function enterGameScreen(state){
   gameScreen.classList.remove("screen-hidden");
   $("gameRoomCode").textContent=roomCode;
   const pill=$("myTeamPill");
-  pill.textContent="Sos Equipo "+myTeam;
+  pill.textContent="Sos "+teamName(myTeam);
   pill.className="my-team-pill "+(myTeam==="A"?"a":"b");
   $("connectionDot").classList.add("online");
   $("connectionText").textContent=state.playerBUid?"Ambos conectados":"Esperando rival";
@@ -2355,6 +2474,10 @@ async function tryResumeFromUrl(){
 }
 
 function leaveRoom(clearUrl=true){
+  if(teamIntroTimer){
+    clearTimeout(teamIntroTimer);
+    teamIntroTimer=null;
+  }
   if(autoMatchTimer){
     clearTimeout(autoMatchTimer);
     autoMatchTimer=null;
