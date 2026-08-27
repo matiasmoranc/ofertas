@@ -1,4 +1,4 @@
-a<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -58,7 +58,6 @@ button:disabled{
 
 header{
   text-align:center;
-  margin-bottom:25px;
 }
 
 header h1{
@@ -476,7 +475,7 @@ header p{
 
 .result-card{
   max-width:800px;
-  margin:25px auto 0;
+  margin:10px auto 25px auto;
   text-align:center;
 }
 
@@ -1108,6 +1107,11 @@ header p{
 .turn-money.my-team-money.team-a-money:after{color:#63b7ff;}
 .turn-money.my-team-money.team-b-money:after{color:#ff7182;}
 
+
+.score-scorers{
+  white-space:pre-line;
+}
+
 </style>
 </head>
 <body>
@@ -1118,10 +1122,7 @@ header p{
 
 <section id="lobbyScreen" class="lobby-wrap">
   <div class="lobby-card">
-    <h2>🎮 Partida online</h2>
-    <p>Podés crear una partida privada con código o publicar una mesa abierta para que cualquier jugador conectado pueda entrar.</p>
-    <div id="firebaseStatus" class="firebase-status">Comprobando Firebase...</div>
-
+    <div id="firebaseStatus" class="firebase-status" style="display:none;"></div>
     <button id="createRoomButton" class="lobby-button" type="button">🔒 CREAR PARTIDA PRIVADA</button>
 
     <div class="open-room-box">
@@ -1163,7 +1164,7 @@ header p{
     <div id="myTeamPill" class="my-team-pill">Equipo ?</div>
   </div>
 
-  <div style="text-align:center;margin-bottom:14px;">
+  <div style="text-align:center;">
     <div id="phaseBadge" class="phase-badge">🧤 FASE DE ARQUEROS</div>
   </div>
 
@@ -1247,7 +1248,7 @@ header p{
       <div class="match-team-b">ROJO 🔴</div>
       <div class="match-ball">⚽</div>
     </div>
-    <div class="match-loading">Calculando el resultado<span class="match-dots"></span></div>
+    <div class="match-loading">Calculando el do<span class="match-dots"></span></div>
   </section>
 
   <section id="resultCard" class="result-card hidden">
@@ -1285,7 +1286,7 @@ header p{
 
     <button id="revengeButton" class="revenge-button" type="button">🔄 REVANCHA</button>
   </section>
-  <button id="leaveRoomButton" class="reset-button" type="button" style="background:rgba(255,255,255,.08);color:white;margin-top:-12px;">Salir de la sala</button>
+  <button id="leaveRoomButton" class="reset-button" type="button" style="background:rgba(255,255,255,.08);color:white;">Salir de la sala</button>
 </section>
 </div>
 
@@ -1860,7 +1861,7 @@ function formatGoalScorers(names){
 
   return Object.entries(counts)
     .map(([name,count])=>count>1 ? `${name} ×${count}` : name)
-    .join(" · ");
+    .join("\n");
 }
 
 function buildMatchResult(state){
