@@ -854,6 +854,111 @@ header p{
   font-size:11px;
 }
 
+
+/* =========================
+   PARTIDO AUTOMÁTICO
+========================= */
+.match-animation{
+  max-width:800px;
+  margin:28px auto 0;
+  padding:34px 18px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(7,20,14,.96);
+  text-align:center;
+  overflow:hidden;
+}
+.match-animation-title{
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:2px;
+  color:#ffd45c;
+}
+.match-animation h2{
+  margin:10px 0 22px;
+  font-size:30px;
+}
+.match-field{
+  position:relative;
+  width:min(520px,100%);
+  height:120px;
+  margin:0 auto 20px;
+  border:2px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  background:
+    linear-gradient(90deg,transparent 49.5%,rgba(255,255,255,.18) 49.5%,rgba(255,255,255,.18) 50.5%,transparent 50.5%),
+    rgba(45,105,62,.35);
+  overflow:hidden;
+}
+.match-field:before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:54px;
+  height:54px;
+  border:2px solid rgba(255,255,255,.18);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+}
+.match-ball{
+  position:absolute;
+  left:14px;
+  top:43px;
+  font-size:30px;
+  animation:ballMatch 1.25s ease-in-out infinite alternate;
+}
+.match-team-a,
+.match-team-b{
+  position:absolute;
+  top:12px;
+  font-size:11px;
+  font-weight:900;
+}
+.match-team-a{left:12px;color:#8ec9ff;}
+.match-team-b{right:12px;color:#ff9a9a;}
+.match-loading{
+  color:#9fb0a6;
+  font-size:12px;
+}
+.match-dots:after{
+  content:"";
+  animation:matchDots 1.2s steps(4,end) infinite;
+}
+@keyframes ballMatch{
+  0%{left:12px;transform:rotate(0deg) scale(.9);}
+  48%{top:18px;}
+  100%{left:calc(100% - 48px);top:68px;transform:rotate(720deg) scale(1.12);}
+}
+@keyframes matchDots{
+  0%{content:"";}
+  25%{content:".";}
+  50%{content:"..";}
+  75%,100%{content:"...";}
+}
+.revenge-button{
+  width:100%;
+  max-width:360px;
+  margin:24px auto 0;
+  display:block;
+  border:0;
+  border-radius:15px;
+  padding:16px;
+  background:#baff42;
+  color:#07100b;
+  font-size:17px;
+  font-weight:900;
+  cursor:pointer;
+}
+.revenge-button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+@media (prefers-reduced-motion:reduce){
+  .match-ball{animation:none;left:calc(50% - 15px);}
+  .match-dots:after{animation:none;content:"...";}
+}
+
 </style>
 </head>
 <body>
@@ -913,7 +1018,7 @@ header p{
     <div id="phaseBadge" class="phase-badge">🧤 FASE DE ARQUEROS</div>
   </div>
 
-  <div class="game">
+  <div id="gameArea" class="game">
     <section class="team-card">
       <div class="team-header">
         <div><small>JUGADOR</small><h2>🔵 EQUIPO A</h2></div>
@@ -968,7 +1073,6 @@ header p{
       <button id="offerButton" class="main-button" type="button">OFERTAR €1</button>
       <button id="passButton" class="pass-button" type="button">PASAR</button>
       <div id="message" class="message">Esperando al rival...</div>
-      <button id="playButton" class="play-button hidden" type="button">🏆 JUGAR PARTIDO</button>
     </main>
 
     <section class="team-card">
@@ -979,6 +1083,17 @@ header p{
       <div id="teamB" class="squad"></div>
     </section>
   </div>
+
+  <section id="matchAnimation" class="match-animation hidden" aria-live="polite">
+    <div class="match-animation-title">⚽ PARTIDO EN JUEGO</div>
+    <h2>¡SE JUEGA EL PARTIDO!</h2>
+    <div class="match-field">
+      <div class="match-team-a">🔵 EQUIPO A</div>
+      <div class="match-team-b">EQUIPO B 🔴</div>
+      <div class="match-ball">⚽</div>
+    </div>
+    <div class="match-loading">Calculando el resultado<span class="match-dots"></span></div>
+  </section>
 
   <section id="resultCard" class="result-card hidden">
     <div class="result-title">RESULTADO</div>
@@ -1003,9 +1118,9 @@ header p{
         <div id="playerValuesB"></div>
       </div>
     </div>
-  </section>
 
-  <button id="resetButton" class="reset-button" type="button">Reiniciar partida</button>
+    <button id="revengeButton" class="revenge-button" type="button">🔄 REVANCHA</button>
+  </section>
   <button id="leaveRoomButton" class="reset-button" type="button" style="background:rgba(255,255,255,.08);color:white;margin-top:-12px;">Salir de la sala</button>
 </section>
 </div>
@@ -1150,6 +1265,7 @@ let lastAuctionKey = "";
 let unsubscribeOpenRooms = null;
 let currentRoomIsOpen = false;
 const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
+let autoMatchTimer = null;
 
 function firebaseConfigured(){
   return Boolean(
@@ -1275,7 +1391,7 @@ function prepareNextAuctionInState(state,eventPrefix=""){
   if(teamIsFullState(state,"A") && teamIsFullState(state,"B")){
     state.currentPlayerIndex=null;
     state.status="ready";
-    state.message=(eventPrefix ? eventPrefix+" " : "")+"✅ Equipos completos. Tocá JUGAR PARTIDO.";
+    state.message=(eventPrefix ? eventPrefix+" " : "")+"✅ Equipos completos. El partido comienza automáticamente.";
     return;
   }
 
@@ -1567,7 +1683,8 @@ function buildMatchResult(state){
 async function playMatch(){
   await mutateGame((state)=>{
     if(teamEntries(state,"A").length!==5 || teamEntries(state,"B").length!==5) return false;
-    if(!state.result) state.result=buildMatchResult(state);
+    if(state.result) return false;
+    state.result=buildMatchResult(state);
     state.status="finished";
     state.message="🏆 Partido finalizado.";
     return true;
@@ -1575,6 +1692,10 @@ async function playMatch(){
 }
 
 async function resetGame(){
+  if(autoMatchTimer){
+    clearTimeout(autoMatchTimer);
+    autoMatchTimer=null;
+  }
   await mutateGame((state,team)=>{
     if(team!=="A"){state.message="Solo el Equipo A puede reiniciar la partida.";return true;}
     const seed=nextSeed(state.rngSeed||Date.now());
@@ -1759,10 +1880,40 @@ function updateScreen(){
   }
 
   const full=teamEntries(gameState,"A").length===5 && teamEntries(gameState,"B").length===5;
-  $("playButton").classList.toggle("hidden",!full || Boolean(gameState.result));
-  $("playButton").disabled=!full;
-  $("resetButton").disabled=myTeam!=="A";
-  $("resetButton").textContent=myTeam==="A"?"Reiniciar partida":"Solo A puede reiniciar";
+  const hasResult=Boolean(gameState.result);
+
+  if(full && !hasResult){
+    $("gameArea").classList.add("hidden");
+    $("matchAnimation").classList.remove("hidden");
+    $("resultCard").classList.add("hidden");
+
+    if(!autoMatchTimer){
+      autoMatchTimer=setTimeout(async()=>{
+        autoMatchTimer=null;
+        await playMatch();
+      },2800);
+    }
+  } else if(hasResult){
+    if(autoMatchTimer){
+      clearTimeout(autoMatchTimer);
+      autoMatchTimer=null;
+    }
+    $("gameArea").classList.add("hidden");
+    $("matchAnimation").classList.add("hidden");
+  } else {
+    if(autoMatchTimer){
+      clearTimeout(autoMatchTimer);
+      autoMatchTimer=null;
+    }
+    $("gameArea").classList.remove("hidden");
+    $("matchAnimation").classList.add("hidden");
+  }
+
+  const revengeButton=$("revengeButton");
+  if(revengeButton){
+    revengeButton.disabled=myTeam!=="A";
+    revengeButton.textContent=myTeam==="A"?"🔄 REVANCHA":"ESPERANDO REVANCHA DEL EQUIPO A";
+  }
 
   if(openedMiniTeam) renderMiniTeam(openedMiniTeam);
   renderResult(); updateBackground();
@@ -2125,6 +2276,10 @@ async function tryResumeFromUrl(){
 }
 
 function leaveRoom(clearUrl=true){
+  if(autoMatchTimer){
+    clearTimeout(autoMatchTimer);
+    autoMatchTimer=null;
+  }
   const oldRoomCode=roomCode;
   const wasOpen=currentRoomIsOpen;
   const wasWaiting=gameState?.status==="waiting";
@@ -2165,8 +2320,7 @@ $("bidMinus").addEventListener("click",()=>changeBid(-1));
 $("bidPlus").addEventListener("click",()=>changeBid(1));
 $("offerButton").addEventListener("click",makeBid);
 $("passButton").addEventListener("click",passBid);
-$("playButton").addEventListener("click",playMatch);
-$("resetButton").addEventListener("click",resetGame);
+$("revengeButton").addEventListener("click",resetGame);
 $("leaveRoomButton").addEventListener("click",()=>leaveRoom(true));
 
 async function boot(){
