@@ -2087,7 +2087,7 @@ function updateScreen(){
   const turnBadge=$("turnBadge");
   turnBadge.classList.remove("turn-a-badge","turn-b-badge");
   turnBadge.classList.add(gameState.currentBidder==="A"?"turn-a-badge":"turn-b-badge");
-  turnBadge.innerHTML=gameState.currentBidder==="A"?"🔵 TURNO DE OFERTAR: AZUL":"🔴 TURNO DE OFERTAR: ROJO";
+  turnBadge.innerHTML=gameState.currentBidder==="A"?"🔵 TURNO: AZUL":"🔴 TURNO: ROJO";
 
   const auctionKey=`${gameState.currentPlayerIndex}|${gameState.currentBid}|${gameState.currentBidder}`;
   if(auctionKey!==lastAuctionKey){
