@@ -778,6 +778,82 @@ header p{
   .player-values-table{font-size:10px;}
 }
 
+
+/* =========================
+   MESAS ABIERTAS
+========================= */
+.open-room-box{
+  margin-top:18px;
+  padding:16px;
+  border-radius:16px;
+  background:rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.10);
+}
+.open-room-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.open-room-title strong{font-size:14px;}
+.open-room-title span{font-size:10px;color:#82938a;}
+.table-name-input{
+  width:100%;
+  padding:13px 14px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.30);
+  color:white;
+  font-size:15px;
+  font-weight:800;
+  outline:none;
+}
+.open-rooms-list{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+.open-room-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  border-radius:13px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+}
+.open-room-info{min-width:0;}
+.open-room-name{
+  font-size:13px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.open-room-code{
+  margin-top:3px;
+  font-size:9px;
+  color:#819188;
+  letter-spacing:1px;
+}
+.open-room-join{
+  border:0;
+  border-radius:10px;
+  padding:10px 12px;
+  background:#1d5b8f;
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+}
+.open-room-empty{
+  padding:12px;
+  text-align:center;
+  color:#718278;
+  font-size:11px;
+}
+
 </style>
 </head>
 <body>
@@ -789,10 +865,31 @@ header p{
 <section id="lobbyScreen" class="lobby-wrap">
   <div class="lobby-card">
     <h2>🎮 Partida online</h2>
-    <p>Uno crea la sala y queda como Equipo A. El otro ingresa el código y queda como Equipo B.</p>
+    <p>Podés crear una partida privada con código o publicar una mesa abierta para que cualquier jugador conectado pueda entrar.</p>
     <div id="firebaseStatus" class="firebase-status">Comprobando Firebase...</div>
-    <button id="createRoomButton" class="lobby-button" type="button">CREAR PARTIDA</button>
-    <div class="lobby-separator">O UNIRSE</div>
+
+    <button id="createRoomButton" class="lobby-button" type="button">🔒 CREAR PARTIDA PRIVADA</button>
+
+    <div class="open-room-box">
+      <div class="open-room-title">
+        <strong>🌐 Crear mesa abierta</strong>
+        <span>Visible para todos</span>
+      </div>
+      <input id="tableNameInput" class="table-name-input" maxlength="28" autocomplete="off" placeholder="Ej: Mesa de Mati">
+      <button id="createOpenRoomButton" class="lobby-button secondary" type="button">PUBLICAR MESA ABIERTA</button>
+    </div>
+
+    <div class="open-room-box">
+      <div class="open-room-title">
+        <strong>🟢 Mesas abiertas</strong>
+        <span id="openRoomsCount">0 disponibles</span>
+      </div>
+      <div id="openRoomsList" class="open-rooms-list">
+        <div class="open-room-empty">Buscando mesas...</div>
+      </div>
+    </div>
+
+    <div class="lobby-separator">O UNIRSE CON CÓDIGO</div>
     <input id="roomCodeInput" class="room-input" maxlength="6" autocomplete="off" placeholder="ABC123">
     <button id="joinRoomButton" class="lobby-button secondary" type="button">UNIRSE A PARTIDA</button>
     <div id="lobbyMessage" class="message">Conectando...</div>
@@ -916,7 +1013,7 @@ header p{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import { getDatabase, ref, get, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, runTransaction, remove, set } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 /* =================================================
    1) PEGÁ ACÁ TU CONFIGURACIÓN DE FIREBASE
@@ -1050,6 +1147,9 @@ let unsubscribeGame = null;
 let selectedBid = 1;
 let openedMiniTeam = null;
 let lastAuctionKey = "";
+let unsubscribeOpenRooms = null;
+let currentRoomIsOpen = false;
+const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
 
 function firebaseConfigured(){
   return Boolean(
@@ -1668,6 +1768,156 @@ function updateScreen(){
   renderResult(); updateBackground();
 }
 
+
+function sanitizeTableName(value){
+  return String(value || "")
+    .replace(/\s+/g," ")
+    .trim()
+    .slice(0,28);
+}
+
+function loadSavedTableName(){
+  try{
+    const saved=localStorage.getItem(TABLE_NAME_STORAGE_KEY);
+    if(saved) $("tableNameInput").value=saved;
+  }catch(error){
+    console.warn("No se pudo leer localStorage:",error);
+  }
+}
+
+function saveTableName(name){
+  try{
+    localStorage.setItem(TABLE_NAME_STORAGE_KEY,name);
+  }catch(error){
+    console.warn("No se pudo guardar localStorage:",error);
+  }
+}
+
+function renderOpenRooms(openRooms){
+  const list=$("openRoomsList");
+  const count=$("openRoomsCount");
+  if(!list || !count) return;
+
+  const rooms=Object.entries(openRooms || {})
+    .map(([code,data])=>({code,...data}))
+    .filter(room=>room && room.code && room.name)
+    .sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+
+  count.textContent=`${rooms.length} ${rooms.length===1?"disponible":"disponibles"}`;
+  list.innerHTML="";
+
+  if(!rooms.length){
+    list.innerHTML='<div class="open-room-empty">No hay mesas abiertas en este momento.</div>';
+    return;
+  }
+
+  rooms.forEach(room=>{
+    const item=document.createElement("div");
+    item.className="open-room-item";
+
+    const info=document.createElement("div");
+    info.className="open-room-info";
+
+    const name=document.createElement("div");
+    name.className="open-room-name";
+    name.textContent=room.name;
+
+    const code=document.createElement("div");
+    code.className="open-room-code";
+    code.textContent=`SALA ${room.code}`;
+
+    info.appendChild(name);
+    info.appendChild(code);
+
+    const join=document.createElement("button");
+    join.className="open-room-join";
+    join.type="button";
+    join.textContent="ENTRAR";
+    join.addEventListener("click",()=>joinOpenRoom(room.code));
+
+    item.appendChild(info);
+    item.appendChild(join);
+    list.appendChild(item);
+  });
+}
+
+function listenToOpenRooms(){
+  if(!db) return;
+  if(unsubscribeOpenRooms) unsubscribeOpenRooms();
+
+  unsubscribeOpenRooms=onValue(
+    ref(db,"openRooms"),
+    snapshot=>renderOpenRooms(snapshot.val() || {}),
+    error=>{
+      console.error("Error cargando mesas abiertas:",error);
+      if($("openRoomsList")) $("openRoomsList").innerHTML='<div class="open-room-empty">No se pudieron cargar las mesas.</div>';
+    }
+  );
+}
+
+async function createOpenRoom(){
+  if(!db || !uid) return setLobbyMessage("Firebase todavía no está listo.",true);
+
+  const name=sanitizeTableName($("tableNameInput").value);
+  if(!name) return setLobbyMessage("Escribí un nombre para la mesa.",true);
+
+  $("createOpenRoomButton").disabled=true;
+  setLobbyMessage("Publicando mesa abierta...");
+
+  try{
+    for(let attempt=0;attempt<8;attempt++){
+      const code=generateRoomCode();
+      const roomRef=ref(db,`games/${code}`);
+
+      const tx=await runTransaction(
+        roomRef,
+        current=>current ? undefined : freshGameState(code,uid,null,Date.now()>>>0),
+        {applyLocally:false}
+      );
+
+      if(!tx.committed) continue;
+
+      await set(ref(db,`openRooms/${code}`),{
+        name,
+        roomCode:code,
+        ownerUid:uid,
+        createdAt:Date.now()
+      });
+
+      saveTableName(name);
+      currentRoomIsOpen=true;
+      roomCode=code;
+      myTeam="A";
+      history.replaceState(null,"",`${location.pathname}?room=${code}`);
+      showCreatedRoom(code);
+      setLobbyMessage(`✅ Mesa "${name}" publicada. Esperando rival...`);
+      listenToRoom(code);
+      return;
+    }
+
+    throw new Error("No se pudo generar una mesa.");
+  }catch(error){
+    console.error(error);
+    setLobbyMessage("No se pudo crear la mesa abierta: "+error.message,true);
+  }finally{
+    $("createOpenRoomButton").disabled=false;
+  }
+}
+
+async function joinOpenRoom(code){
+  const normalized=normalizeCode(code);
+  if(normalized.length!==6) return;
+
+  $("roomCodeInput").value=normalized;
+  setLobbyMessage("Entrando a la mesa abierta...");
+
+  try{
+    await joinRoom(normalized,true);
+  }catch(error){
+    console.error(error);
+  }
+}
+
 async function createRoom(){
   if(!db || !uid) return setLobbyMessage("Firebase todavía no está listo.",true);
   $("createRoomButton").disabled=true;
@@ -1677,7 +1927,7 @@ async function createRoom(){
       const roomRef=ref(db,`games/${code}`);
       const tx=await runTransaction(roomRef,current=> current ? undefined : freshGameState(code,uid,null,Date.now()>>>0),{applyLocally:false});
       if(tx.committed){
-        roomCode=code; myTeam="A"; history.replaceState(null,"",`${location.pathname}?room=${code}`);
+        currentRoomIsOpen=false; roomCode=code; myTeam="A"; history.replaceState(null,"",`${location.pathname}?room=${code}`);
         showCreatedRoom(code); listenToRoom(code); return;
       }
     }
@@ -1686,12 +1936,12 @@ async function createRoom(){
   finally{$("createRoomButton").disabled=false;}
 }
 
-async function joinRoom(){
+async function joinRoom(forcedCode=null, fromOpenRoom=false){
   if(!db || !uid){
     return setLobbyMessage("Firebase todavía no está listo.",true);
   }
 
-  const code=normalizeCode($("roomCodeInput").value);
+  const code=normalizeCode(forcedCode || $("roomCodeInput").value);
 
   if(code.length!==6){
     return setLobbyMessage("Ingresá el código de 6 caracteres.",true);
@@ -1778,6 +2028,11 @@ async function joinRoom(){
       throw new Error("Firebase no pudo asignarte como Equipo B.");
     }
 
+    if(fromOpenRoom || (await get(ref(db,`openRooms/${code}`))).exists()){
+      try{ await remove(ref(db,`openRooms/${code}`)); }catch(error){ console.warn("No se pudo quitar la mesa abierta:",error); }
+    }
+
+    currentRoomIsOpen=false;
     roomCode=code;
     myTeam="B";
 
@@ -1836,6 +2091,11 @@ function listenToRoom(code){
     if(!state){ leaveRoom(false); setLobbyMessage("La sala ya no existe.",true); return; }
     gameState=state;
     myTeam=state.playerAUid===uid?"A":state.playerBUid===uid?"B":null;
+
+    if(state.playerBUid && currentRoomIsOpen){
+      currentRoomIsOpen=false;
+      remove(ref(db,`openRooms/${code}`)).catch(error=>console.warn("No se pudo ocultar la mesa abierta:",error));
+    }
     if(!myTeam){ leaveRoom(false); setLobbyMessage("No pertenecés a esta sala.",true); return; }
     if(state.status==="waiting" && myTeam==="A"){
       lobbyScreen.classList.remove("screen-hidden"); gameScreen.classList.add("screen-hidden");
@@ -1852,13 +2112,33 @@ async function tryResumeFromUrl(){
   const snap=await get(ref(db,`games/${code}`));
   if(!snap.exists()) return;
   const state=snap.val();
-  if(state.playerAUid===uid || state.playerBUid===uid){ roomCode=code; myTeam=state.playerAUid===uid?"A":"B"; listenToRoom(code); }
+  if(state.playerAUid===uid || state.playerBUid===uid){
+    roomCode=code;
+    myTeam=state.playerAUid===uid?"A":"B";
+    if(myTeam==="A" && state.status==="waiting"){
+      const openSnap=await get(ref(db,`openRooms/${code}`));
+      currentRoomIsOpen=openSnap.exists();
+    }
+    listenToRoom(code);
+  }
   else { $("roomCodeInput").value=code; setLobbyMessage("Sala encontrada. Tocá UNIRSE A PARTIDA."); }
 }
 
 function leaveRoom(clearUrl=true){
+  const oldRoomCode=roomCode;
+  const wasOpen=currentRoomIsOpen;
+  const wasWaiting=gameState?.status==="waiting";
+  const wasTeamA=myTeam==="A";
+
   if(unsubscribeGame) unsubscribeGame();
-  unsubscribeGame=null; roomCode=null; myTeam=null; gameState=null; openedMiniTeam=null; lastAuctionKey="";
+  unsubscribeGame=null;
+
+  if(db && oldRoomCode && wasOpen && wasWaiting && wasTeamA){
+    remove(ref(db,`openRooms/${oldRoomCode}`)).catch(error=>console.warn("No se pudo quitar la mesa abierta:",error));
+  }
+
+  currentRoomIsOpen=false;
+  roomCode=null; myTeam=null; gameState=null; openedMiniTeam=null; lastAuctionKey="";
   gameScreen.classList.add("screen-hidden"); lobbyScreen.classList.remove("screen-hidden"); $("roomReady").classList.add("screen-hidden");
   if(clearUrl) history.replaceState(null,"",location.pathname);
 }
@@ -1872,7 +2152,8 @@ function changeBid(delta){
 }
 
 $("createRoomButton").addEventListener("click",createRoom);
-$("joinRoomButton").addEventListener("click",joinRoom);
+$("createOpenRoomButton").addEventListener("click",createOpenRoom);
+$("joinRoomButton").addEventListener("click",()=>joinRoom());
 $("roomCodeInput").addEventListener("input",e=>e.target.value=normalizeCode(e.target.value));
 $("copyRoomButton").addEventListener("click",async()=>{
   try{ await navigator.clipboard.writeText(roomCode||""); $("copyRoomButton").textContent="¡COPIADO!"; setTimeout(()=>$("copyRoomButton").textContent="COPIAR CÓDIGO",1200); }catch{ setLobbyMessage("Código: "+roomCode); }
@@ -1893,14 +2174,22 @@ async function boot(){
     firebaseStatus.textContent="⚠️ Falta pegar firebaseConfig. El HTML ya está preparado; seguí los pasos que te voy a indicar.";
     firebaseStatus.className="firebase-status error";
     setLobbyMessage("Primero configurá Firebase y pegá los datos en firebaseConfig.",true);
-    $("createRoomButton").disabled=true; $("joinRoomButton").disabled=true;
+    $("createRoomButton").disabled=true; $("createOpenRoomButton").disabled=true; $("joinRoomButton").disabled=true;
     return;
   }
   try{
     app=initializeApp(firebaseConfig); auth=getAuth(app); db=getDatabase(app);
     firebaseStatus.textContent="✅ Firebase configurado. Iniciando sesión anónima..."; firebaseStatus.className="firebase-status ok";
     onAuthStateChanged(auth,async user=>{
-      if(user){ uid=user.uid; firebaseStatus.textContent="✅ Firebase conectado"; firebaseStatus.className="firebase-status ok"; setLobbyMessage("Creá una sala o ingresá el código de tu rival."); await tryResumeFromUrl(); }
+      if(user){
+        uid=user.uid;
+        firebaseStatus.textContent="✅ Firebase conectado";
+        firebaseStatus.className="firebase-status ok";
+        setLobbyMessage("Creá una sala, publicá una mesa abierta o ingresá el código de tu rival.");
+        loadSavedTableName();
+        listenToOpenRooms();
+        await tryResumeFromUrl();
+      }
     });
     await signInAnonymously(auth);
   }catch(error){
