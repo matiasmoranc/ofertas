@@ -1113,6 +1113,97 @@ header p{
   white-space:pre-line;
 }
 
+/* =========================
+   PASES CONSECUTIVOS
+========================= */
+.pass-counter{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.24);
+  border:1px solid rgba(255,255,255,.10);
+  text-align:center;
+}
+.pass-counter-label{
+  display:block;
+  margin-bottom:7px;
+  color:#93a59a;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.8px;
+}
+.pass-dots{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+}
+.pass-dot{
+  width:13px;
+  height:13px;
+  border-radius:50%;
+  background:#baff42;
+  box-shadow:0 0 9px rgba(186,255,66,.35);
+  transition:opacity .2s ease, transform .2s ease, background .2s ease;
+}
+.pass-dot.used{
+  opacity:.22;
+  background:#6e7771;
+  box-shadow:none;
+  transform:scale(.82);
+}
+.pass-counter-text{
+  margin-top:7px;
+  color:#b9c5bd;
+  font-size:10px;
+  font-weight:800;
+}
+.pass-counter.blocked{
+  border-color:rgba(255,212,92,.35);
+  background:rgba(255,212,92,.08);
+}
+.pass-counter.blocked .pass-counter-text{
+  color:#ffd45c;
+}
+
+.waiting-opponent{
+  max-width:620px;
+  margin:28px auto;
+  padding:34px 18px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(7,20,14,.96);
+  text-align:center;
+}
+.waiting-opponent-icon{
+  font-size:42px;
+  margin-bottom:12px;
+}
+.waiting-opponent h2{
+  margin:0 0 8px;
+  font-size:26px;
+}
+.waiting-opponent p{
+  margin:0;
+  color:#9fb0a6;
+  line-height:1.45;
+}
+.waiting-opponent-code{
+  display:inline-block;
+  margin-top:18px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:rgba(0,0,0,.30);
+  color:#ffd454;
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:4px;
+}
+.waiting-opponent-note{
+  margin-top:12px;
+  color:#7f9186;
+  font-size:10px;
+}
+
 </style>
 </head>
 <body>
@@ -1164,6 +1255,14 @@ header p{
     <div>Sala <strong id="gameRoomCode">------</strong></div>
     <div id="myTeamPill" class="my-team-pill">Equipo ?</div>
   </div>
+
+  <section id="waitingOpponent" class="waiting-opponent hidden" aria-live="polite">
+    <div class="waiting-opponent-icon">⏳</div>
+    <h2>Esperando rival...</h2>
+    <p>Ya estás dentro de la sala. La partida comenzará automáticamente cuando entre el segundo jugador.</p>
+    <div id="waitingOpponentCode" class="waiting-opponent-code">------</div>
+    <div id="waitingOpponentNote" class="waiting-opponent-note">Compartí este código con tu rival.</div>
+  </section>
 
   <div style="text-align:center;">
     <div id="phaseBadge" class="phase-badge">🧤 FASE DE ARQUEROS</div>
@@ -1223,6 +1322,15 @@ header p{
 
       <button id="offerButton" class="main-button" type="button">OFERTAR €1</button>
       <button id="passButton" class="pass-button" type="button">PASAR</button>
+      <div id="passCounter" class="pass-counter" aria-live="polite">
+        <span class="pass-counter-label">PASES CONSECUTIVOS DISPONIBLES</span>
+        <div class="pass-dots" aria-hidden="true">
+          <span id="passDot1" class="pass-dot"></span>
+          <span id="passDot2" class="pass-dot"></span>
+          <span id="passDot3" class="pass-dot"></span>
+        </div>
+        <div id="passCounterText" class="pass-counter-text">3 de 3</div>
+      </div>
       <div id="message" class="message">Esperando al rival...</div>
     </main>
 
@@ -2064,18 +2172,55 @@ function updateTeamIntro(){
   name.textContent="SOS EL EQUIPO "+teamName(myTeam);
 }
 
+function updatePassCounter(){
+  const counter=$("passCounter");
+  if(!counter) return;
+
+  const team=myTeam;
+  const used=team ? Math.min(3,Math.max(0,gameState?.consecutivePasses?.[team] || 0)) : 0;
+  const remaining=Math.max(0,3-used);
+
+  for(let i=1;i<=3;i++){
+    const dot=$("passDot"+i);
+    if(dot) dot.classList.toggle("used",i>remaining);
+  }
+
+  const text=$("passCounterText");
+  if(text){
+    if(remaining===0){
+      text.textContent="0 de 3 — ofertá para recuperar los pases";
+    }else{
+      text.textContent=`${remaining} de 3`;
+    }
+  }
+
+  counter.classList.toggle("blocked",remaining===0);
+}
+
 function updateScreen(){
   if(!gameState) return;
 
   updateMyMoneyHighlight();
 
   const introVisible=!$("teamIntro").classList.contains("hidden");
+  const waitingForOpponent=gameState.status==="waiting" && !gameState.playerBUid;
+  if($("waitingOpponent")){
+    $("waitingOpponent").classList.toggle("hidden",!waitingForOpponent);
+  }
+  if(waitingForOpponent){
+    $("gameArea").classList.add("hidden");
+    $("teamIntro").classList.add("hidden");
+    $("matchAnimation").classList.add("hidden");
+    $("resultCard").classList.add("hidden");
+  }
+
   $("moneyA").textContent="€"+gameState.money.A; $("moneyB").textContent="€"+gameState.money.B;
   $("turnMoneyA").textContent="€"+gameState.money.A; $("turnMoneyB").textContent="€"+gameState.money.B;
   if($("liveMoneyA")) $("liveMoneyA").textContent="€"+gameState.money.A;
   if($("liveMoneyB")) $("liveMoneyB").textContent="€"+gameState.money.B;
   renderTeam("A"); renderTeam("B");
   renderLiveTeam("A"); renderLiveTeam("B");
+  updatePassCounter();
 
   const player=playerByIndex(gameState.currentPlayerIndex);
   $("playerName").textContent=player?player.name:(gameState.status==="waiting"?"ESPERANDO RIVAL":"SIN JUGADOR");
@@ -2103,11 +2248,19 @@ function updateScreen(){
   const bothBroke=bothTeamsBrokeState(gameState);
   const broke=teamWithoutMoneyState(gameState);
   const requiredPassDisabled=gameState.forceOpeningBid && !gameState.leader && gameState.currentBid===0 && !(broke && myTeam!==broke) && !bothBroke;
+  const myPassesUsed=myTeam ? Math.min(3,gameState.consecutivePasses?.[myTeam] || 0) : 0;
+  const cannotOutbidNow=Boolean(
+    myTeam &&
+    gameState.leader &&
+    (gameState.money[myTeam] || 0) <= (gameState.currentBid || 0)
+  );
+  const passLimitReached=myPassesUsed>=3 && !cannotOutbidNow;
+  const passIsBlocked=requiredPassDisabled || passLimitReached;
 
   $("bidMinus").disabled=!myTurn || !hasMoney;
   $("bidPlus").disabled=!myTurn || !hasMoney;
   $("offerButton").disabled=!myTurn || !hasMoney || selectedBid<=gameState.currentBid;
-  $("passButton").disabled=!myTurn || requiredPassDisabled;
+  $("passButton").disabled=!myTurn || passIsBlocked;
 
   if(!myTurn){
     $("offerButton").textContent="ESPERANDO AL RIVAL";
@@ -2117,7 +2270,14 @@ function updateScreen(){
     $("passButton").textContent="PASAR";
   } else {
     $("offerButton").textContent=`OFERTAR €${selectedBid}`;
-    $("passButton").textContent=requiredPassDisabled?"DEBÉS OFERTAR €1":"PASAR";
+    if(passLimitReached){
+      $("passButton").textContent="SIN PASES — DEBÉS OFERTAR";
+    }else if(requiredPassDisabled){
+      $("passButton").textContent="DEBÉS OFERTAR €1";
+    }else{
+      const remaining=Math.max(0,3-myPassesUsed);
+      $("passButton").textContent=`PASAR (${remaining})`;
+    }
   }
 
   const full=teamEntries(gameState,"A").length===5 && teamEntries(gameState,"B").length===5;
@@ -2153,10 +2313,18 @@ function updateScreen(){
       autoMatchTimer=null;
     }
 
+    if(waitingForOpponent){
+      $("gameArea").classList.add("hidden");
+      $("teamIntro").classList.add("hidden");
+      $("matchAnimation").classList.add("hidden");
+      $("resultCard").classList.add("hidden");
+    }
     /* Si está corriendo la presentación inicial del equipo,
        NO cancelamos su temporizador. Así desaparece sola
        exactamente a los 2 segundos. */
-    if(introVisible){
+    if(waitingForOpponent){
+      // El creador ya está dentro de la sala, pero todavía no mostramos la subasta.
+    } else if(introVisible){
       $("gameArea").classList.add("hidden");
       $("matchAnimation").classList.add("hidden");
       $("resultCard").classList.add("hidden");
@@ -2336,8 +2504,9 @@ async function createOpenRoom(){
       roomCode=code;
       myTeam="A";
       history.replaceState(null,"",`${location.pathname}?room=${code}`);
-      showCreatedRoom(code);
-      setLobbyMessage(`✅ Mesa "${name}" publicada. Esperando rival...`);
+      gameState=tx.snapshot.val();
+      enterGameScreen(gameState);
+      updateScreen();
       listenToRoom(code);
       return;
     }
@@ -2375,7 +2544,11 @@ async function createRoom(){
       const tx=await runTransaction(roomRef,current=> current ? undefined : freshGameState(code,uid,null,Date.now()>>>0),{applyLocally:false});
       if(tx.committed){
         currentRoomIsOpen=false; roomCode=code; myTeam="A"; history.replaceState(null,"",`${location.pathname}?room=${code}`);
-        showCreatedRoom(code); listenToRoom(code); return;
+        gameState=tx.snapshot.val();
+        enterGameScreen(gameState);
+        updateScreen();
+        listenToRoom(code);
+        return;
       }
     }
     throw new Error("No se pudo generar una sala.");
@@ -2523,11 +2696,31 @@ function enterGameScreen(state){
   lobbyScreen.classList.add("screen-hidden");
   gameScreen.classList.remove("screen-hidden");
   $("gameRoomCode").textContent=roomCode;
+  if($("waitingOpponentCode")) $("waitingOpponentCode").textContent=roomCode || "------";
   const pill=$("myTeamPill");
   pill.textContent="Sos "+teamName(myTeam);
   pill.className="my-team-pill "+(myTeam==="A"?"a":"b");
   $("connectionDot").classList.add("online");
   $("connectionText").textContent=state.playerBUid?"Ambos conectados":"Esperando rival";
+
+  const waitingForOpponent=!state.playerBUid;
+  if($("waitingOpponent")){
+    $("waitingOpponent").classList.toggle("hidden",!waitingForOpponent);
+  }
+  if($("waitingOpponentCode")){
+    $("waitingOpponentCode").textContent=roomCode || "------";
+  }
+  if($("waitingOpponentNote")){
+    $("waitingOpponentNote").textContent=currentRoomIsOpen
+      ? "Tu mesa está publicada y visible para todos."
+      : "Compartí este código con tu rival.";
+  }
+  if(waitingForOpponent){
+    $("gameArea").classList.add("hidden");
+    $("teamIntro").classList.add("hidden");
+    $("matchAnimation").classList.add("hidden");
+    $("resultCard").classList.add("hidden");
+  }
 
   /* Cuando ambos jugadores ya están dentro, ocultamos la barra superior.
      Así la presentación de equipo y el juego quedan más limpios. */
@@ -2580,12 +2773,11 @@ function listenToRoom(code){
       remove(ref(db,`openRooms/${code}`)).catch(error=>console.warn("No se pudo ocultar la mesa abierta:",error));
     }
     if(!myTeam){ leaveRoom(false); setLobbyMessage("No pertenecés a esta sala.",true); return; }
-    if(state.status==="waiting" && myTeam==="A"){
-      lobbyScreen.classList.remove("screen-hidden"); gameScreen.classList.add("screen-hidden");
-      showCreatedRoom(code); $("waitingText").textContent="Esperando al Equipo B...";
-    } else {
-      enterGameScreen(state); updateScreen();
-    }
+
+    /* El creador entra inmediatamente a la sala, incluso mientras espera rival.
+       El panel "Esperando rival..." reemplaza al lobby hasta que llegue el Equipo Rojo. */
+    enterGameScreen(state);
+    updateScreen();
   },error=>{ console.error(error); $("connectionText").textContent="Error de conexión"; });
 }
 
