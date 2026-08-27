@@ -1243,7 +1243,7 @@ header p{
 
     <button id="revengeButton" class="revenge-button" type="button">🔄 REVANCHA</button>
   </section>
-  <button id="leaveRoomButton" class="reset-button" type="button" style="background:rgba(255,255,255,.08);color:white;margin-top:-12px;">Salir de la sala</button>
+  <button id="leaveRoomButton" class="reset-button" type="button" style="background:rgba(255,255,255,.08);color:white;">Salir de la sala</button>
 </section>
 </div>
 
@@ -1389,6 +1389,7 @@ let currentRoomIsOpen = false;
 const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
 let autoMatchTimer = null;
 let teamIntroTimer = null;
+let hasShownTeamIntro = false;
 
 function firebaseConfigured(){
   return Boolean(
@@ -2008,6 +2009,8 @@ function updateTeamIntro(){
 
 function updateScreen(){
   if(!gameState) return;
+
+  const introVisible=!$("teamIntro").classList.contains("hidden");
   $("moneyA").textContent="€"+gameState.money.A; $("moneyB").textContent="€"+gameState.money.B;
   $("turnMoneyA").textContent="€"+gameState.money.A; $("turnMoneyB").textContent="€"+gameState.money.B;
   if($("liveMoneyA")) $("liveMoneyA").textContent="€"+gameState.money.A;
@@ -2063,23 +2066,15 @@ function updateScreen(){
 
   if(full && !hasResult){
     $("gameArea").classList.add("hidden");
+    $("teamIntro").classList.add("hidden");
     $("resultCard").classList.add("hidden");
-    updateTeamIntro();
+    $("matchAnimation").classList.remove("hidden");
 
-    if(!teamIntroTimer && !autoMatchTimer){
-      $("teamIntro").classList.remove("hidden");
-      $("matchAnimation").classList.add("hidden");
-
-      teamIntroTimer=setTimeout(()=>{
-        teamIntroTimer=null;
-        $("teamIntro").classList.add("hidden");
-        $("matchAnimation").classList.remove("hidden");
-
-        autoMatchTimer=setTimeout(async()=>{
-          autoMatchTimer=null;
-          await playMatch();
-        },2200);
-      },1800);
+    if(!autoMatchTimer){
+      autoMatchTimer=setTimeout(async()=>{
+        autoMatchTimer=null;
+        await playMatch();
+      },2200);
     }
   } else if(hasResult){
     if(teamIntroTimer){
@@ -2102,8 +2097,8 @@ function updateScreen(){
       clearTimeout(autoMatchTimer);
       autoMatchTimer=null;
     }
-    $("gameArea").classList.remove("hidden");
-    $("teamIntro").classList.add("hidden");
+    if(!introVisible) $("gameArea").classList.remove("hidden");
+    if(!introVisible) $("teamIntro").classList.add("hidden");
     $("matchAnimation").classList.add("hidden");
   }
 
@@ -2430,6 +2425,36 @@ function enterGameScreen(state){
   pill.className="my-team-pill "+(myTeam==="A"?"a":"b");
   $("connectionDot").classList.add("online");
   $("connectionText").textContent=state.playerBUid?"Ambos conectados":"Esperando rival";
+
+  if(state.playerBUid && !hasShownTeamIntro){
+    hasShownTeamIntro=true;
+    updateTeamIntro();
+
+    $("gameArea").classList.add("hidden");
+    $("matchAnimation").classList.add("hidden");
+    $("resultCard").classList.add("hidden");
+    $("teamIntro").classList.remove("hidden");
+
+    if(teamIntroTimer) clearTimeout(teamIntroTimer);
+    teamIntroTimer=setTimeout(()=>{
+      teamIntroTimer=null;
+      $("teamIntro").classList.add("hidden");
+
+      if(gameState?.result){
+        $("gameArea").classList.add("hidden");
+      } else if(
+        teamEntries(gameState,"A").length===5 &&
+        teamEntries(gameState,"B").length===5
+      ){
+        $("gameArea").classList.add("hidden");
+        $("matchAnimation").classList.remove("hidden");
+      } else {
+        $("gameArea").classList.remove("hidden");
+      }
+
+      updateScreen();
+    },1800);
+  }
 }
 
 function listenToRoom(code){
@@ -2495,6 +2520,7 @@ function leaveRoom(clearUrl=true){
   }
 
   currentRoomIsOpen=false;
+  hasShownTeamIntro=false;
   roomCode=null; myTeam=null; gameState=null; openedMiniTeam=null; lastAuctionKey="";
   gameScreen.classList.add("screen-hidden"); lobbyScreen.classList.remove("screen-hidden"); $("roomReady").classList.add("screen-hidden");
   if(clearUrl) history.replaceState(null,"",location.pathname);
