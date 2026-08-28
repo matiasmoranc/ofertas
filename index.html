@@ -862,7 +862,26 @@ header p{
 .mini-match{
   max-width:800px;
   margin:18px auto 25px;
+  padding:14px;
+  border-radius:24px;
   text-align:center;
+  transition:background .35s ease, box-shadow .35s ease;
+}
+.mini-match.mini-turn-a{
+  background:radial-gradient(circle at center,rgba(13,95,168,.38),rgba(5,25,44,.88) 72%);
+  box-shadow:0 0 34px rgba(99,183,255,.18);
+}
+.mini-match.mini-turn-b{
+  background:radial-gradient(circle at center,rgba(165,31,50,.38),rgba(45,8,15,.88) 72%);
+  box-shadow:0 0 34px rgba(255,113,130,.18);
+}
+.mini-match.mini-turn-a .mini-pitch{
+  border-color:#63b7ff;
+  box-shadow:0 0 9px rgba(99,183,255,.85),0 0 24px rgba(99,183,255,.34),inset 0 0 12px rgba(99,183,255,.10);
+}
+.mini-match.mini-turn-b .mini-pitch{
+  border-color:#ff7182;
+  box-shadow:0 0 9px rgba(255,113,130,.85),0 0 24px rgba(255,113,130,.34),inset 0 0 12px rgba(255,113,130,.10);
 }
 .mini-match-head{
   padding:16px;
@@ -909,6 +928,7 @@ header p{
   overflow:hidden;
   border:2px solid rgba(255,255,255,.22);
   border-radius:18px;
+  transition:border-color .35s ease, box-shadow .35s ease;
   background:
     linear-gradient(90deg,
       rgba(18,70,42,.90) 0 33.333%,
@@ -1409,7 +1429,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-  <p style="font-size:.7rem;color:grey;">v 0.01</p>
+   <p style="font-size:.7rem;color:grey;">v 0.02</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -2530,6 +2550,8 @@ function renderMiniMatch(){
   box.classList.remove("hidden");
 
   const attacker=mini.attacker;
+  box.classList.remove("mini-turn-a","mini-turn-b");
+  box.classList.add(attacker==="A"?"mini-turn-a":"mini-turn-b");
   const defender=otherPlayer(attacker);
   const needed=mini.advancesNeeded?.[attacker]||3;
   const isAttacker=myTeam===attacker;
