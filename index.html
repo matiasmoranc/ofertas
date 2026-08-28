@@ -638,6 +638,7 @@ header p{
 }
 .my-team-pill.a{background:#0d5fa8;}
 .my-team-pill.b{background:#a51f32;}
+.my-team-pill.spectator{background:#5b6470;color:#fff;}
 
 @media(max-width:500px){
   .lobby-card{padding:16px;}
@@ -1538,7 +1539,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.06</p>
+     <p style="font-size:.7rem;color:grey;">v 0.08</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -2005,6 +2006,7 @@ let db = null;
 let uid = null;
 let roomCode = null;
 let myTeam = null;
+let isSpectator = false;
 let gameState = null;
 let unsubscribeGame = null;
 let selectedBid = 1;
@@ -2057,9 +2059,18 @@ function playerByIndex(index){ return Number.isInteger(index) ? players[index] :
 function teamEntries(state, team){ return Array.isArray(state?.teams?.[team]) ? state.teams[team] : []; }
 function teamIsFullState(state, team){ return teamEntries(state,team).length >= 5; }
 function hasGoalkeeperState(state, team){ return teamEntries(state,team).some(entry => playerByIndex(entry.playerIndex)?.pos === "GP"); }
-function goalkeeperPhaseCompleteState(state){ return hasGoalkeeperState(state,"A") && hasGoalkeeperState(state,"B"); }
+function teamCannotAddState(state, team){
+  return teamIsFullState(state,team) || (state.money?.[team] || 0) <= 0;
+}
+function bothTeamsDoneBuildingState(state){
+  return teamCannotAddState(state,"A") && teamCannotAddState(state,"B");
+}
+function goalkeeperPhaseCompleteState(state){
+  return (hasGoalkeeperState(state,"A") || teamCannotAddState(state,"A")) &&
+         (hasGoalkeeperState(state,"B") || teamCannotAddState(state,"B"));
+}
 function bothTeamsBrokeState(state){
-  return state.money.A===0 && state.money.B===0 && !teamIsFullState(state,"A") && !teamIsFullState(state,"B");
+  return state.money.A===0 && state.money.B===0;
 }
 function teamWithoutMoneyState(state){
   const a = state.money.A===0 && !teamIsFullState(state,"A");
@@ -2145,10 +2156,16 @@ function finishAuctionInState(state,eventText="",keepForceOpening=false){
 
 function prepareNextAuctionInState(state,eventPrefix=""){
   if(state.status==="waiting") return;
-  if(teamIsFullState(state,"A") && teamIsFullState(state,"B")){
+
+  /* Un equipo queda cerrado apenas llega a €0, aunque tenga menos de 5.
+     El partido comienza cuando ninguno de los dos puede seguir sumando. */
+  if(bothTeamsDoneBuildingState(state)){
     state.currentPlayerIndex=null;
     state.status="ready";
-    state.message=(eventPrefix ? eventPrefix+" " : "")+"✅ Equipos completos. El partido comienza automáticamente.";
+    const countA=teamEntries(state,"A").length;
+    const countB=teamEntries(state,"B").length;
+    state.message=(eventPrefix ? eventPrefix+" " : "")+
+      `✅ Mercado terminado. Azul ${countA}/5 · Rojo ${countB}/5. El partido comienza automáticamente.`;
     return;
   }
 
@@ -2163,9 +2180,11 @@ function prepareNextAuctionInState(state,eventPrefix=""){
     if(used.has(index)) return;
     if(state.goalkeeperPhase ? p.pos==="GP" : p.pos!=="GP") available.push(index);
   });
+
   if(!available.length){
     state.currentPlayerIndex=null;
-    state.message="No quedan jugadores disponibles.";
+    state.status="ready";
+    state.message=(eventPrefix ? eventPrefix+" " : "")+"✅ No quedan jugadores disponibles. El partido comienza.";
     return;
   }
 
@@ -2176,55 +2195,41 @@ function prepareNextAuctionInState(state,eventPrefix=""){
   state.currentBid=0;
   state.leader=null;
   state.zeroBidPasses=0;
-  state.currentBidder=state.firstBidder || "A";
 
-  if(state.goalkeeperPhase){
-    const aHas=hasGoalkeeperState(state,"A");
-    const bHas=hasGoalkeeperState(state,"B");
-    if(aHas && !bHas) state.currentBidder="B";
-    else if(bHas && !aHas) state.currentBidder="A";
+  const aCanAdd=!teamCannotAddState(state,"A");
+  const bCanAdd=!teamCannotAddState(state,"B");
 
-    /* Si solo falta un GP y ese equipo tiene €0, lo recibe gratis para evitar bloqueo. */
-    if(aHas !== bHas && state.money[state.currentBidder]===0){
-      const needed=state.currentBidder;
-      appendPlayer(state,needed,index,0);
-      state.currentPlayerIndex=null;
-      if(goalkeeperPhaseCompleteState(state)) state.goalkeeperPhase=false;
-      state.forceOpeningBid=false;
-      state.firstBidder=otherPlayer(state.firstBidder || "A");
-      prepareNextAuctionInState(state,`🧤 ${players[index].name} llega gratis al Equipo ${needed} porque necesitaba arquero y no tenía dinero.`);
-      return;
+  /* Nunca darle turno a un equipo con €0 o ya completo. */
+  if(aCanAdd && !bCanAdd) state.currentBidder="A";
+  else if(bCanAdd && !aCanAdd) state.currentBidder="B";
+  else {
+    state.currentBidder=state.firstBidder || "A";
+    if(teamCannotAddState(state,state.currentBidder)){
+      state.currentBidder=otherPlayer(state.currentBidder);
     }
-  } else {
-    if(teamIsFullState(state,state.currentBidder)) state.currentBidder=otherPlayer(state.currentBidder);
   }
 
-  if(!bothTeamsBrokeState(state)){
-    const broke=teamWithoutMoneyState(state);
-    if(broke){
-      const rival=otherPlayer(broke);
-      if(!teamIsFullState(state,rival)) state.currentBidder=rival;
-      else if(!teamIsFullState(state,broke)){
-        appendPlayer(state,broke,index,0);
-        state.currentPlayerIndex=null;
-        state.firstBidder=otherPlayer(state.firstBidder || "A");
-        prepareNextAuctionInState(state,`🎁 ${players[index].name} llega gratis al Equipo ${broke} porque el rival ya completó su equipo.`);
-        return;
-      }
-    }
+  if(state.goalkeeperPhase){
+    const aNeeds=aCanAdd && !hasGoalkeeperState(state,"A");
+    const bNeeds=bCanAdd && !hasGoalkeeperState(state,"B");
+    if(aNeeds && !bNeeds) state.currentBidder="A";
+    else if(bNeeds && !aNeeds) state.currentBidder="B";
   }
 
   const p=players[index];
   let instruction="";
-  if(bothTeamsBrokeState(state)){
-    instruction=`💸 Ambos tienen €0. Equipo ${state.currentBidder}: si pasás, ${p.name} va gratis al Equipo ${otherPlayer(state.currentBidder)}.`;
+  const opponent=otherPlayer(state.currentBidder);
+
+  if(teamCannotAddState(state,opponent)){
+    instruction=`💸 ${teamLabel(opponent)} ya cerró su plantel. ${teamLabel(state.currentBidder)} puede ofertar o pasar por ${p.name}.`;
+  } else if(state.goalkeeperPhase){
+    instruction=`🧤 ${p.name} sale al mercado.`;
+  } else if(state.forceOpeningBid){
+    instruction=`⚠️ ${teamLabel(state.currentBidder)} debe ofertar mínimo €1 por ${p.name}.`;
   } else {
-    const broke=teamWithoutMoneyState(state);
-    if(broke) instruction=`💸 Equipo ${broke} tiene €0. Si Equipo ${state.currentBidder} pasa, ${p.name} va gratis al Equipo ${broke}.`;
-    else if(state.goalkeeperPhase) instruction=`🧤 ${p.name} sale al mercado.`;
-    else if(state.forceOpeningBid) instruction=`⚠️ Equipo ${state.currentBidder} debe ofertar mínimo €1 por ${p.name}.`;
-    else instruction=`🔥 ${p.name} sale al mercado.`;
+    instruction=`🔥 ${p.name} sale al mercado.`;
   }
+
   state.message=(eventPrefix ? eventPrefix+" " : "")+instruction;
 }
 
@@ -2307,18 +2312,6 @@ async function passBid(){
       return true;
     }
 
-    if(bothTeamsBrokeState(state) && !state.leader && state.currentBid===0){
-      const receiver=otherPlayer(team);
-      awardFreeInState(state,receiver,`🎁 Equipo ${team} pasa. ${player.name} va gratis al Equipo ${receiver}.`);
-      return true;
-    }
-
-    const broke=teamWithoutMoneyState(state);
-    if(broke && team!==broke && !state.leader && state.currentBid===0){
-      awardFreeInState(state,broke,`🎁 Equipo ${team} pasa. ${player.name} va gratis al Equipo ${broke}.`);
-      return true;
-    }
-
     if(state.goalkeeperPhase){
       const aHas=hasGoalkeeperState(state,"A");
       const bHas=hasGoalkeeperState(state,"B");
@@ -2343,10 +2336,13 @@ async function passBid(){
     }
 
     const opponent=otherPlayer(team);
-    if(teamIsFullState(state,opponent) && !state.leader && state.currentBid===0){
-      if((state.consecutivePasses?.[team] || 0) > 3){ state.message="⚠️ Ya pasaste 3 veces consecutivas. Debés ofertar mínimo €1."; return true; }
+    if(teamCannotAddState(state,opponent) && !state.leader && state.currentBid===0){
       state.forceOpeningBid=false;
-      finishAuctionInState(state,`⏭️ Equipo ${team} pasa por ${player.name}.`,false);
+      finishAuctionInState(
+        state,
+        `⏭️ ${teamLabel(team)} pasa por ${player.name}. ${teamLabel(opponent)} no puede sumarlo porque su plantel está cerrado.`,
+        false
+      );
       return true;
     }
 
@@ -2394,8 +2390,19 @@ function calculateTeamFromState(state,team){
   if(df>=3)attack-=8;
   if(gp>=1&&df>=1&&md>=1&&dl>=1){attack+=1;midfield+=2;defense+=2;}
   attack=clamp(attack,10,99); midfield=clamp(midfield,10,99); defense=clamp(defense,5,99); goalkeeper=clamp(goalkeeper,5,99);
+
+  /* Penalización por plantel incompleto:
+     5 jugadores = 100% del puntaje
+     4 = 80%, 3 = 60%, 2 = 40%, 1 = 20%. */
+  const playerCount=squad.length;
+  const squadFactor=clamp(playerCount/5,0,1);
+  attack*=squadFactor;
+  midfield*=squadFactor;
+  defense*=squadFactor;
+  goalkeeper*=squadFactor;
+
   const overall=attack*.30+midfield*.25+defense*.25+goalkeeper*.20;
-  return {attack,midfield,defense,goalkeeper,overall,positions:{gp,df,md,dl}};
+  return {attack,midfield,defense,goalkeeper,overall,playerCount,squadFactor,positions:{gp,df,md,dl}};
 }
 
 function chooseGoalScorerFromState(state,team){
@@ -2455,7 +2462,12 @@ function teamRatingAverageFromState(state,team){
   const ratings=teamEntries(state,team)
     .map(entry=>playerByIndex(entry.playerIndex)?.rating)
     .filter(Number.isFinite);
-  return ratings.length ? ratings.reduce((sum,value)=>sum+value,0)/ratings.length : 0;
+
+  if(!ratings.length) return 0;
+
+  const rawAverage=ratings.reduce((sum,value)=>sum+value,0)/ratings.length;
+  const squadFactor=clamp(ratings.length/5,0,1);
+  return rawAverage*squadFactor;
 }
 
 function buildMiniMatchState(state){
@@ -2738,8 +2750,12 @@ function renderMiniMatch(){
       $("miniTurnText").textContent="Tocá IZQUIERDA, CENTRO o DERECHA directamente en la cancha.";
       buttons.forEach(btn=>btn.disabled=false);
     }else{
-      $("miniTurnTitle").textContent=`⏳ ${teamName(attacker)} está eligiendo por dónde avanzar`;
-      $("miniTurnText").textContent="Esperando la elección del rival...";
+      $("miniTurnTitle").textContent=isSpectator
+        ?`👁 ${teamName(attacker)} está atacando`
+        :`⏳ ${teamName(attacker)} está eligiendo por dónde avanzar`;
+      $("miniTurnText").textContent=isSpectator
+        ?"Esperando la elección del atacante..."
+        :"Esperando la elección del rival...";
       showBall=false;
     }
   }else if(mini.phase==="defense"){
@@ -2756,6 +2772,10 @@ function renderMiniMatch(){
       $("miniTurnTitle").textContent=`${defender==="A"?"🔵":"🔴"} TU TURNO — DEFENDÉS`;
       $("miniTurnText").textContent="La pelota está oculta. Tocá el sector que pensás que eligió el rival.";
       buttons.forEach(btn=>btn.disabled=false);
+    }else if(isSpectator){
+      showBall=false;
+      $("miniTurnTitle").textContent=`👁 ${teamName(defender)} está defendiendo`;
+      $("miniTurnText").textContent="Esperando la elección del defensor...";
     }
   }else if(mini.phase==="resolved"){
     const res=mini.resolution||{};
@@ -2780,11 +2800,13 @@ function renderMiniMatch(){
       flash.classList.add("show");
     }
 
-    if(miniResolutionTimer) clearTimeout(miniResolutionTimer);
-    miniResolutionTimer=setTimeout(()=>{
-      miniResolutionTimer=null;
-      advanceMiniAfterResolution(res.id);
-    },1150);
+    if(!isSpectator){
+      if(miniResolutionTimer) clearTimeout(miniResolutionTimer);
+      miniResolutionTimer=setTimeout(()=>{
+        miniResolutionTimer=null;
+        advanceMiniAfterResolution(res.id);
+      },1150);
+    }
   }
 
   ball.style.left=miniLaneX(displayLane)+'%';
@@ -3083,9 +3105,7 @@ function updateScreen(){
 
   const myTurn=canCurrentUserAct(gameState);
   const hasMoney=myTeam ? gameState.money[myTeam]>0 : false;
-  const bothBroke=bothTeamsBrokeState(gameState);
-  const broke=teamWithoutMoneyState(gameState);
-  const requiredPassDisabled=gameState.forceOpeningBid && !gameState.leader && gameState.currentBid===0 && !(broke && myTeam!==broke) && !bothBroke;
+  const requiredPassDisabled=gameState.forceOpeningBid && !gameState.leader && gameState.currentBid===0;
   const myPassesUsed=myTeam ? Math.min(3,gameState.consecutivePasses?.[myTeam] || 0) : 0;
   const cannotOutbidNow=Boolean(
     myTeam &&
@@ -3100,7 +3120,10 @@ function updateScreen(){
   $("offerButton").disabled=!myTurn || !hasMoney || selectedBid<=gameState.currentBid;
   $("passButton").disabled=!myTurn || passIsBlocked;
 
-  if(!myTurn){
+  if(isSpectator){
+    $("offerButton").textContent="👁 SOLO LECTURA";
+    $("passButton").textContent="MIRANDO PARTIDO";
+  } else if(!myTurn){
     $("offerButton").textContent="ESPERANDO AL RIVAL";
     $("passButton").textContent="ESPERANDO AL RIVAL";
   } else if(!hasMoney){
@@ -3128,7 +3151,7 @@ function updateScreen(){
     $("matchAnimation").classList.add("hidden");
     if($("miniMatch")) $("miniMatch").classList.remove("hidden");
 
-    if(!gameState.miniMatch){
+    if(!gameState.miniMatch && !isSpectator){
       ensureMiniMatch();
     }
   } else if(hasResult){
@@ -3178,8 +3201,10 @@ function updateScreen(){
 
   const revengeButton=$("revengeButton");
   if(revengeButton){
-    revengeButton.disabled=myTeam!=="A";
-    revengeButton.textContent=myTeam==="A"?"🔄 REVANCHA":"ESPERANDO REVANCHA DEL EQUIPO AZUL";
+    revengeButton.disabled=isSpectator || myTeam!=="A";
+    revengeButton.textContent=isSpectator
+      ?"👁 FIN DEL PARTIDO"
+      :(myTeam==="A"?"🔄 REVANCHA":"ESPERANDO REVANCHA DEL EQUIPO AZUL");
   }
 
   if(openedMiniTeam) renderMiniTeam(openedMiniTeam);
@@ -3248,7 +3273,8 @@ function renderOpenRooms(openRooms){
       if(!room || !room.code || !room.name) return false;
 
       const createdAt=Number(room.createdAt || 0);
-      const expired=createdAt>0 && (now-createdAt)>=OPEN_ROOM_MAX_AGE;
+      const isPlaying=room.status==="playing";
+      const expired=!isPlaying && createdAt>0 && (now-createdAt)>=OPEN_ROOM_MAX_AGE;
 
       if(expired){
         deleteExpiredOpenRoom(room.code,room);
@@ -3281,7 +3307,10 @@ function renderOpenRooms(openRooms){
     const code=document.createElement("div");
     code.className="open-room-code";
     const ageMinutes=Math.max(0,Math.floor((Date.now()-(room.createdAt||Date.now()))/60000));
-    code.textContent=`SALA ${room.code} · ${ageMinutes} min`;
+    const isPlaying=room.status==="playing";
+    code.textContent=isPlaying
+      ? `SALA ${room.code} · 🔴 PARTIDO EN JUEGO`
+      : `SALA ${room.code} · ${ageMinutes} min`;
 
     info.appendChild(name);
     info.appendChild(code);
@@ -3289,8 +3318,8 @@ function renderOpenRooms(openRooms){
     const join=document.createElement("button");
     join.className="open-room-join";
     join.type="button";
-    join.textContent="ENTRAR";
-    join.addEventListener("click",()=>joinOpenRoom(room.code));
+    join.textContent=isPlaying?"👁 MIRAR PARTIDO":"ENTRAR";
+    join.addEventListener("click",()=>isPlaying?watchOpenRoom(room.code):joinOpenRoom(room.code));
 
     item.appendChild(info);
     item.appendChild(join);
@@ -3338,7 +3367,8 @@ async function createOpenRoom(){
         name,
         roomCode:code,
         ownerUid:uid,
-        createdAt:Date.now()
+        createdAt:Date.now(),
+        status:"waiting"
       });
 
       saveTableName(name);
@@ -3373,6 +3403,39 @@ async function joinOpenRoom(code){
     await joinRoom(normalized,true);
   }catch(error){
     console.error(error);
+  }
+}
+
+
+async function watchOpenRoom(code){
+  const normalized=normalizeCode(code);
+  if(normalized.length!==6 || !db) return;
+
+  setLobbyMessage("Abriendo partido como espectador...");
+
+  try{
+    const snap=await get(ref(db,`games/${normalized}`));
+    if(!snap.exists()) throw new Error("La sala ya no existe.");
+
+    const state=snap.val();
+    if(!state.playerAUid || !state.playerBUid){
+      throw new Error("El partido todavía no comenzó.");
+    }
+
+    roomCode=normalized;
+    myTeam=null;
+    isSpectator=true;
+    currentRoomIsOpen=true;
+    hasShownTeamIntro=true;
+    gameState=state;
+
+    history.replaceState(null,"",`${location.pathname}?room=${normalized}&watch=1`);
+    enterGameScreen(state);
+    updateScreen();
+    listenToRoom(normalized);
+  }catch(error){
+    console.error("Error mirando la sala:",error);
+    setLobbyMessage(error.message || "No se pudo abrir el partido.",true);
   }
 }
 
@@ -3491,10 +3554,17 @@ async function joinRoom(forcedCode=null, fromOpenRoom=false){
     }
 
     if(fromOpenRoom || (await get(ref(db,`openRooms/${code}`))).exists()){
-      try{ await remove(ref(db,`openRooms/${code}`)); }catch(error){ console.warn("No se pudo quitar la mesa abierta:",error); }
+      try{
+        await update(ref(db,`openRooms/${code}`),{
+          status:"playing",
+          startedAt:Date.now()
+        });
+      }catch(error){
+        console.warn("No se pudo marcar la mesa como partido en juego:",error);
+      }
     }
 
-    currentRoomIsOpen=false;
+    currentRoomIsOpen=Boolean(fromOpenRoom);
     roomCode=code;
     myTeam="B";
 
@@ -3540,8 +3610,13 @@ function enterGameScreen(state){
   $("gameRoomCode").textContent=roomCode;
   if($("waitingOpponentCode")) $("waitingOpponentCode").textContent=roomCode || "------";
   const pill=$("myTeamPill");
-  pill.textContent="Sos "+teamName(myTeam);
-  pill.className="my-team-pill "+(myTeam==="A"?"a":"b");
+  if(isSpectator){
+    pill.textContent="👁 ESPECTADOR";
+    pill.className="my-team-pill spectator";
+  }else{
+    pill.textContent="Sos "+teamName(myTeam);
+    pill.className="my-team-pill "+(myTeam==="A"?"a":"b");
+  }
   $("connectionDot").classList.add("online");
   $("connectionText").textContent=state.playerBUid?"Ambos conectados":"Esperando rival";
 
@@ -3568,10 +3643,10 @@ function enterGameScreen(state){
   /* Cuando ambos jugadores ya están dentro, ocultamos la barra superior.
      Así la presentación de equipo y el juego quedan más limpios. */
   if($("connectionBar")){
-    $("connectionBar").classList.toggle("hidden",Boolean(state.playerBUid));
+    $("connectionBar").classList.toggle("hidden",Boolean(state.playerBUid) && !isSpectator);
   }
 
-  if(state.playerBUid && !hasShownTeamIntro){
+  if(state.playerBUid && !hasShownTeamIntro && !isSpectator){
     hasShownTeamIntro=true;
     updateTeamIntro();
 
@@ -3609,38 +3684,70 @@ function listenToRoom(code){
   unsubscribeGame=onValue(roomRef,snapshot=>{
     const state=snapshot.val();
     if(!state){ leaveRoom(false); setLobbyMessage("La sala ya no existe.",true); return; }
+
     gameState=state;
-    myTeam=state.playerAUid===uid?"A":state.playerBUid===uid?"B":null;
 
-    if(state.playerBUid && currentRoomIsOpen){
-      currentRoomIsOpen=false;
-      remove(ref(db,`openRooms/${code}`)).catch(error=>console.warn("No se pudo ocultar la mesa abierta:",error));
+    if(!isSpectator){
+      myTeam=state.playerAUid===uid?"A":state.playerBUid===uid?"B":null;
+      if(!myTeam){
+        leaveRoom(false);
+        setLobbyMessage("No pertenecés a esta sala.",true);
+        return;
+      }
+    }else{
+      myTeam=null;
     }
-    if(!myTeam){ leaveRoom(false); setLobbyMessage("No pertenecés a esta sala.",true); return; }
 
-    /* El creador entra inmediatamente a la sala, incluso mientras espera rival.
-       El panel "Esperando rival..." reemplaza al lobby hasta que llegue el Equipo Rojo. */
+    /* Las mesas públicas siguen visibles mientras se juega para que otros
+       usuarios puedan entrar como espectadores. Al terminar, se quitan del lobby. */
+    if(state.result){
+      remove(ref(db,`openRooms/${code}`)).catch(()=>{});
+    }
+
     enterGameScreen(state);
     updateScreen();
-  },error=>{ console.error(error); $("connectionText").textContent="Error de conexión"; });
+  },error=>{
+    console.error(error);
+    $("connectionText").textContent="Error de conexión";
+  });
 }
 
 async function tryResumeFromUrl(){
-  const code=normalizeCode(new URLSearchParams(location.search).get("room"));
+  const params=new URLSearchParams(location.search);
+  const code=normalizeCode(params.get("room"));
+  const wantsWatch=params.get("watch")==="1";
   if(code.length!==6 || !db || !uid) return;
+
   const snap=await get(ref(db,`games/${code}`));
   if(!snap.exists()) return;
   const state=snap.val();
+
+  if(wantsWatch && state.playerAUid!==uid && state.playerBUid!==uid){
+    const openSnap=await get(ref(db,`openRooms/${code}`));
+    if(openSnap.exists() && state.playerAUid && state.playerBUid){
+      roomCode=code;
+      myTeam=null;
+      isSpectator=true;
+      currentRoomIsOpen=true;
+      hasShownTeamIntro=true;
+      gameState=state;
+      listenToRoom(code);
+      return;
+    }
+  }
+
   if(state.playerAUid===uid || state.playerBUid===uid){
+    isSpectator=false;
     roomCode=code;
     myTeam=state.playerAUid===uid?"A":"B";
-    if(myTeam==="A" && state.status==="waiting"){
-      const openSnap=await get(ref(db,`openRooms/${code}`));
-      currentRoomIsOpen=openSnap.exists();
-    }
+    const openSnap=await get(ref(db,`openRooms/${code}`));
+    currentRoomIsOpen=openSnap.exists();
     listenToRoom(code);
   }
-  else { $("roomCodeInput").value=code; setLobbyMessage("Sala encontrada. Tocá UNIRSE A PARTIDA."); }
+  else{
+    $("roomCodeInput").value=code;
+    setLobbyMessage("Sala encontrada. Tocá UNIRSE A PARTIDA.");
+  }
 }
 
 function leaveRoom(clearUrl=true){
@@ -3671,7 +3778,7 @@ function leaveRoom(clearUrl=true){
 
   currentRoomIsOpen=false;
   hasShownTeamIntro=false;
-  roomCode=null; myTeam=null; gameState=null; openedMiniTeam=null; lastAuctionKey="";
+  roomCode=null; myTeam=null; isSpectator=false; gameState=null; openedMiniTeam=null; lastAuctionKey="";
   gameScreen.classList.add("screen-hidden"); lobbyScreen.classList.remove("screen-hidden"); $("roomReady").classList.add("screen-hidden");
   if($("connectionBar")) $("connectionBar").classList.remove("hidden");
   if(clearUrl) history.replaceState(null,"",location.pathname);
