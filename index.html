@@ -1538,7 +1538,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.05</p>
+     <p style="font-size:.7rem;color:grey;">v 0.06</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -2466,12 +2466,24 @@ function buildMiniMatchState(state){
   const attackLimit={A:3,B:3};
   const advancesNeeded={A:3,B:3};
 
-  if(better && diff>=5 && diff<10){
+  if(better && diff<=1){
     attackLimit[better]=4;
-    advancesNeeded[better]=2;
+    attackLimit[otherPlayer(better)]=3;
+    advancesNeeded[better]=3;
     advancesNeeded[otherPlayer(better)]=4;
-  }else if(better && diff>=10){
+  }else if(better && diff<=3){
+    attackLimit[better]=4;
+    attackLimit[otherPlayer(better)]=2;
+    advancesNeeded[better]=2;
+    advancesNeeded[otherPlayer(better)]=5;
+  }else if(better && diff<=4.5){
+    attackLimit[better]=4;
+    attackLimit[otherPlayer(better)]=1;
+    advancesNeeded[better]=2;
+    advancesNeeded[otherPlayer(better)]=5;
+  }else if(better){
     attackLimit[better]=5;
+    attackLimit[otherPlayer(better)]=1;
     advancesNeeded[better]=2;
     advancesNeeded[otherPlayer(better)]=5;
   }
