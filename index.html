@@ -857,6 +857,204 @@ header p{
 
 
 /* =========================
+   MINI PARTIDO INTERACTIVO
+========================= */
+.mini-match{
+  max-width:800px;
+  margin:18px auto 25px;
+  text-align:center;
+}
+.mini-match-head{
+  padding:16px;
+  border-radius:18px;
+  background:rgba(7,20,14,.96);
+  border:1px solid rgba(255,255,255,.12);
+  margin-bottom:12px;
+}
+.mini-match-kicker{
+  color:#ffd45c;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:2px;
+}
+.mini-match-head h2{margin:6px 0 4px;font-size:25px;}
+.mini-match-sub{color:#91a39a;font-size:11px;line-height:1.4;}
+.mini-match-score{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-top:10px;
+  font-size:22px;
+  font-weight:900;
+}
+.mini-match-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+.mini-match-team-info{
+  padding:9px;
+  border-radius:11px;
+  background:rgba(0,0,0,.24);
+  font-size:10px;
+  color:#9fb0a6;
+}
+.mini-match-team-info strong{display:block;color:white;font-size:12px;margin-bottom:2px;}
+.mini-pitch{
+  position:relative;
+  width:min(560px,100%);
+  height:390px;
+  margin:0 auto;
+  overflow:hidden;
+  border:2px solid rgba(255,255,255,.22);
+  border-radius:18px;
+  background:
+    linear-gradient(90deg,
+      rgba(18,70,42,.90) 0 33.333%,
+      rgba(24,84,49,.92) 33.333% 66.666%,
+      rgba(18,70,42,.90) 66.666% 100%);
+}
+.mini-pitch:before,.mini-pitch:after{
+  content:"";
+  position:absolute;
+  top:0;bottom:0;
+  border-left:2px dashed rgba(255,255,255,.28);
+  z-index:2;
+  pointer-events:none;
+}
+.mini-pitch:before{left:33.333%;}
+.mini-pitch:after{left:66.666%;}
+.mini-goal{
+  position:absolute;
+  top:7px;
+  left:50%;
+  width:125px;
+  height:36px;
+  transform:translateX(-50%);
+  border:3px solid rgba(255,255,255,.75);
+  border-top:0;
+  border-radius:0 0 9px 9px;
+  z-index:4;
+  font-size:20px;
+}
+.mini-step-line{
+  position:absolute;
+  left:0;right:0;
+  border-top:1px dashed rgba(255,255,255,.13);
+  z-index:1;
+  pointer-events:none;
+}
+.mini-lane-label{
+  position:absolute;
+  bottom:11px;
+  z-index:4;
+  color:rgba(255,255,255,.68);
+  font-size:10px;
+  font-weight:900;
+  pointer-events:none;
+}
+.mini-lane-button{
+  position:absolute;
+  top:0;bottom:0;
+  width:33.333%;
+  border:0;
+  background:transparent;
+  z-index:8;
+  cursor:pointer;
+  transition:background .16s ease,box-shadow .16s ease;
+}
+.mini-lane-button.left{left:0;}
+.mini-lane-button.center{left:33.333%;}
+.mini-lane-button.right{left:66.666%;}
+.mini-lane-button.touch-a{
+  background:rgba(29,91,143,.25);
+  box-shadow:inset 0 0 0 3px #63b7ff;
+}
+.mini-lane-button.touch-b{
+  background:rgba(165,31,50,.25);
+  box-shadow:inset 0 0 0 3px #ff7182;
+}
+.mini-ball{
+  position:absolute;
+  z-index:7;
+  left:50%;
+  bottom:37px;
+  transform:translateX(-50%);
+  font-size:31px;
+  transition:left .35s ease,bottom .48s ease,opacity .15s ease;
+  pointer-events:none;
+}
+.mini-ball.invisible{opacity:0;}
+.mini-defender-mark{
+  position:absolute;
+  z-index:7;
+  transform:translateX(-50%);
+  font-size:28px;
+  pointer-events:none;
+}
+.mini-trail-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:3;
+  pointer-events:none;
+}
+.mini-trail-svg polyline{
+  fill:none;
+  stroke-width:2.4;
+  stroke-dasharray:5 7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.mini-trail-svg .trail-a{stroke:#63b7ff;}
+.mini-trail-svg .trail-b{stroke:#ff7182;}
+.mini-turn-panel{
+  width:min(560px,100%);
+  margin:10px auto 0;
+  padding:13px;
+  border-radius:14px;
+  background:rgba(7,20,14,.96);
+  border:1px solid rgba(255,255,255,.12);
+}
+.mini-turn-title{font-size:15px;font-weight:900;}
+.mini-turn-text{margin-top:4px;color:#9fb0a6;font-size:11px;}
+.mini-event-flash{
+  position:absolute;
+  left:50%;top:50%;
+  z-index:20;
+  min-width:230px;
+  padding:19px 22px;
+  transform:translate(-50%,-50%);
+  border-radius:18px;
+  background:rgba(2,8,5,.90);
+  border:1px solid rgba(255,255,255,.20);
+  color:white;
+  font-size:29px;
+  font-weight:900;
+  opacity:0;
+  pointer-events:none;
+}
+.mini-event-flash.show{animation:miniEventFlash 1.1s ease forwards;}
+@keyframes miniEventFlash{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.72);}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.07);}
+  68%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.96);}
+}
+@media(max-width:500px){
+  .mini-pitch{height:360px;}
+  .mini-match-head{padding:13px;}
+  .mini-match-head h2{font-size:21px;}
+  .mini-event-flash{min-width:205px;font-size:25px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .mini-ball{transition:none;}
+  .mini-event-flash.show{animation:none;opacity:1;}
+}
+
+/* =========================
    PARTIDO AUTOMÁTICO
 ========================= */
 .match-animation{
@@ -1211,6 +1409,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
+  <p style="font-size:.7rem;color:grey;">v 0.01</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -1348,6 +1547,45 @@ header p{
     <div class="team-intro-small">TU EQUIPO</div>
     <div id="teamIntroName" class="team-intro-name">SOS EL EQUIPO</div>
     <div class="team-intro-ring"></div>
+  </section>
+
+  <section id="miniMatch" class="mini-match hidden" aria-live="polite">
+    <div class="mini-match-head">
+      <div class="mini-match-kicker">⚽ MINI PARTIDO</div>
+      <h2 id="miniMatchTitle">ATAQUE VS DEFENSA</h2>
+      <div id="miniMatchSub" class="mini-match-sub"></div>
+      <div class="mini-match-score">
+        <span>🔵 <span id="miniScoreA">0</span></span>
+        <span>—</span>
+        <span><span id="miniScoreB">0</span> 🔴</span>
+      </div>
+      <div class="mini-match-info">
+        <div class="mini-match-team-info"><strong id="miniInfoA">🔵 AZUL</strong><span id="miniRulesA"></span></div>
+        <div class="mini-match-team-info"><strong id="miniInfoB">🔴 ROJO</strong><span id="miniRulesB"></span></div>
+      </div>
+    </div>
+
+    <div id="miniPitch" class="mini-pitch">
+      <div class="mini-goal">🥅</div>
+      <div class="mini-step-line" style="top:27%"></div>
+      <div class="mini-step-line" style="top:49%"></div>
+      <div class="mini-step-line" style="top:71%"></div>
+      <span class="mini-lane-label" style="left:8%">IZQUIERDA</span>
+      <span class="mini-lane-label" style="left:50%;transform:translateX(-50%)">CENTRO</span>
+      <span class="mini-lane-label" style="right:8%">DERECHA</span>
+      <svg id="miniTrailSvg" class="mini-trail-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div id="miniBall" class="mini-ball">⚽</div>
+      <div id="miniDefenderMark" class="mini-defender-mark hidden">🛡️</div>
+      <div id="miniEventFlash" class="mini-event-flash"></div>
+      <button type="button" class="mini-lane-button left" data-mini-lane="left" aria-label="Elegir izquierda"></button>
+      <button type="button" class="mini-lane-button center" data-mini-lane="center" aria-label="Elegir centro"></button>
+      <button type="button" class="mini-lane-button right" data-mini-lane="right" aria-label="Elegir derecha"></button>
+    </div>
+
+    <div class="mini-turn-panel">
+      <div id="miniTurnTitle" class="mini-turn-title">Preparando mini partido...</div>
+      <div id="miniTurnText" class="mini-turn-text"></div>
+    </div>
   </section>
 
   <section id="matchAnimation" class="match-animation hidden" aria-live="polite">
@@ -1650,6 +1888,9 @@ const OPEN_ROOM_MAX_AGE = 5 * 60 * 1000;
 let autoMatchTimer = null;
 let teamIntroTimer = null;
 let hasShownTeamIntro = false;
+let miniInitPending = false;
+let miniResolutionTimer = null;
+let lastMiniFlashId = null;
 
 function firebaseConfigured(){
   return Boolean(
@@ -1730,6 +1971,7 @@ function freshGameState(code, playerAUid, playerBUid=null, seed=(Date.now()>>>0)
     goalkeeperPhase: true,
     rngSeed: seed,
     result: null,
+    miniMatch: null,
     message: playerBUid ? "🧤 Comienza la fase obligatoria de arqueros." : "Esperando al Equipo B..."
   };
 }
@@ -2080,6 +2322,308 @@ function formatGoalScorers(names){
     .join("\n");
 }
 
+function teamRatingAverageFromState(state,team){
+  const ratings=teamEntries(state,team)
+    .map(entry=>playerByIndex(entry.playerIndex)?.rating)
+    .filter(Number.isFinite);
+  return ratings.length ? ratings.reduce((sum,value)=>sum+value,0)/ratings.length : 0;
+}
+
+function buildMiniMatchState(state){
+  const mediaA=teamRatingAverageFromState(state,"A");
+  const mediaB=teamRatingAverageFromState(state,"B");
+  const diff=Math.abs(mediaA-mediaB);
+  const better=mediaA>mediaB ? "A" : mediaB>mediaA ? "B" : null;
+  const attackLimit={A:3,B:3};
+  const advancesNeeded={A:3,B:3};
+
+  if(better && diff>=5 && diff<10){
+    attackLimit[better]=4;
+    advancesNeeded[better]=2;
+    advancesNeeded[otherPlayer(better)]=4;
+  }else if(better && diff>=10){
+    attackLimit[better]=5;
+    advancesNeeded[better]=2;
+    advancesNeeded[otherPlayer(better)]=5;
+  }
+
+  return {
+    media:{A:mediaA,B:mediaB},
+    difference:diff,
+    better,
+    attackLimit,
+    advancesNeeded,
+    attacker:"A",
+    attackNo:{A:1,B:1},
+    score:{A:0,B:0},
+    progress:0,
+    currentLane:"center",
+    phase:"attack",
+    attackPick:null,
+    defensePick:null,
+    trail:[],
+    resolution:null,
+    resolutionId:0
+  };
+}
+
+async function ensureMiniMatch(){
+  if(miniInitPending || !gameState || gameState.result || gameState.miniMatch) return;
+  miniInitPending=true;
+  try{
+    await mutateGame((state)=>{
+      if(state.result || state.miniMatch) return false;
+      if(teamEntries(state,"A").length!==5 || teamEntries(state,"B").length!==5) return false;
+      state.status="mini_match";
+      state.miniMatch=buildMiniMatchState(state);
+      state.message="⚽ Comienza el mini partido.";
+      return true;
+    });
+  }finally{
+    miniInitPending=false;
+  }
+}
+
+function miniNextAttacker(mini,current){
+  const other=otherPlayer(current);
+  if((mini.attackNo?.[other]||1) <= (mini.attackLimit?.[other]||3)) return other;
+  if((mini.attackNo?.[current]||1) <= (mini.attackLimit?.[current]||3)) return current;
+  return null;
+}
+
+function miniResultFromState(state){
+  const mini=state.miniMatch;
+  const A=calculateTeamFromState(state,"A");
+  const B=calculateTeamFromState(state,"B");
+  const goalsA=Number(mini?.score?.A||0);
+  const goalsB=Number(mini?.score?.B||0);
+  const winner=goalsA>goalsB?"A":goalsB>goalsA?"B":"DRAW";
+  const scorersA=generateGoalScorers(state,"A",goalsA);
+  const scorersB=generateGoalScorers(state,"B",goalsB);
+  return {goalsA,goalsB,winner,A,B,scorersA,scorersB,fromMiniMatch:true};
+}
+
+async function chooseMiniLane(lane){
+  if(!["left","center","right"].includes(lane)) return;
+  await mutateGame((state,team)=>{
+    const mini=state.miniMatch;
+    if(!mini || state.result || mini.phase==="resolved") return false;
+    const attacker=mini.attacker;
+    const defender=otherPlayer(attacker);
+
+    if(mini.phase==="attack"){
+      if(team!==attacker || mini.attackPick) return false;
+      mini.attackPick=lane;
+      mini.phase="defense";
+      state.message=`${teamLabel(attacker)} eligió su avance. Esperando defensa.`;
+      return true;
+    }
+
+    if(mini.phase==="defense"){
+      if(team!==defender || !mini.attackPick || mini.defensePick) return false;
+      mini.defensePick=lane;
+      const blocked=mini.attackPick===mini.defensePick;
+      const fromLane=mini.currentLane || "center";
+      const fromProgress=Number(mini.progress||0);
+      let endsAttack=false;
+      let type="advance";
+
+      if(blocked){
+        endsAttack=true;
+        type="recovery";
+      }else{
+        mini.progress=fromProgress+1;
+        mini.currentLane=mini.attackPick;
+        if(!Array.isArray(mini.trail)) mini.trail=[];
+        mini.trail.push({
+          fromLane,
+          fromProgress,
+          toLane:mini.attackPick,
+          toProgress:mini.progress
+        });
+        if(mini.progress >= mini.advancesNeeded[attacker]){
+          mini.score[attacker]=(mini.score[attacker]||0)+1;
+          endsAttack=true;
+          type="goal";
+        }
+      }
+
+      mini.phase="resolved";
+      mini.resolutionId=Number(mini.resolutionId||0)+1;
+      mini.resolution={
+        id:mini.resolutionId,
+        type,
+        endsAttack,
+        attackLane:mini.attackPick,
+        defenseLane:mini.defensePick
+      };
+      state.message=type==="goal"?`⚽ Gol de ${teamLabel(attacker)}.`:type==="recovery"?`🛡️ ${teamLabel(defender)} recupera la pelota.`:`🏃 ${teamLabel(attacker)} avanza.`;
+      return true;
+    }
+    return false;
+  });
+}
+
+async function advanceMiniAfterResolution(expectedId){
+  await mutateGame((state)=>{
+    const mini=state.miniMatch;
+    if(!mini || state.result || mini.phase!=="resolved" || Number(mini.resolution?.id)!==Number(expectedId)) return false;
+    const resolution=mini.resolution;
+
+    if(!resolution.endsAttack){
+      mini.attackPick=null;
+      mini.defensePick=null;
+      mini.resolution=null;
+      mini.phase="attack";
+      return true;
+    }
+
+    const finishedAttacker=mini.attacker;
+    mini.attackNo[finishedAttacker]=(mini.attackNo[finishedAttacker]||1)+1;
+    const next=miniNextAttacker(mini,finishedAttacker);
+
+    if(!next){
+      state.result=miniResultFromState(state);
+      state.status="finished";
+      state.message="🏆 Partido finalizado.";
+      return true;
+    }
+
+    mini.attacker=next;
+    mini.progress=0;
+    mini.currentLane="center";
+    mini.attackPick=null;
+    mini.defensePick=null;
+    mini.trail=[];
+    mini.resolution=null;
+    mini.phase="attack";
+    return true;
+  });
+}
+
+function miniLaneX(lane){ return lane==="left"?16.67:lane==="right"?83.33:50; }
+function miniProgressY(progress,needed){
+  const p=clamp(Number(progress||0)/Math.max(1,Number(needed||1)),0,1);
+  return 91-(p*72);
+}
+
+function renderMiniTrail(mini,preview=false){
+  const svg=$("miniTrailSvg");
+  if(!svg) return;
+  const needed=mini.advancesNeeded?.[mini.attacker]||3;
+  const points=[`50,${miniProgressY(0,needed)}`];
+  (Array.isArray(mini.trail)?mini.trail:[]).forEach(step=>{
+    points.push(`${miniLaneX(step.toLane)},${miniProgressY(step.toProgress,needed)}`);
+  });
+  if(preview && mini.attackPick){
+    points.push(`${miniLaneX(mini.attackPick)},${miniProgressY((mini.progress||0)+1,needed)}`);
+  }
+  const cls=mini.attacker==="A"?"trail-a":"trail-b";
+  svg.innerHTML=points.length>1?`<polyline class="${cls}" points="${points.join(" ")}"></polyline>`:"";
+}
+
+function renderMiniMatch(){
+  const box=$("miniMatch");
+  const mini=gameState?.miniMatch;
+  if(!box) return;
+  if(!mini || gameState?.result){ box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+
+  const attacker=mini.attacker;
+  const defender=otherPlayer(attacker);
+  const needed=mini.advancesNeeded?.[attacker]||3;
+  const isAttacker=myTeam===attacker;
+  const isDefender=myTeam===defender;
+  const attackNo=mini.attackNo?.[attacker]||1;
+  const limit=mini.attackLimit?.[attacker]||3;
+
+  $("miniScoreA").textContent=mini.score?.A||0;
+  $("miniScoreB").textContent=mini.score?.B||0;
+  $("miniInfoA").textContent=`🔵 AZUL · MEDIA ${(mini.media?.A||0).toFixed(1)}`;
+  $("miniInfoB").textContent=`🔴 ROJO · MEDIA ${(mini.media?.B||0).toFixed(1)}`;
+  $("miniRulesA").textContent=`${mini.attackLimit?.A||3} ataques · ${mini.advancesNeeded?.A||3} avances para gol`;
+  $("miniRulesB").textContent=`${mini.attackLimit?.B||3} ataques · ${mini.advancesNeeded?.B||3} avances para gol`;
+  $("miniMatchSub").textContent=`Ataque ${attackNo} de ${limit} de ${teamName(attacker)} · ${mini.progress||0}/${needed} avances`;
+
+  const buttons=[...rootMiniButtons()];
+  buttons.forEach(btn=>{
+    btn.disabled=true;
+    btn.classList.remove("touch-a","touch-b");
+  });
+  const ball=$("miniBall");
+  const mark=$("miniDefenderMark");
+  mark.classList.add("hidden");
+
+  let displayLane=mini.currentLane||"center";
+  let displayProgress=mini.progress||0;
+  let showBall=true;
+  let preview=false;
+
+  if(mini.phase==="attack"){
+    if(isAttacker){
+      $("miniTurnTitle").textContent=`${attacker==="A"?"🔵":"🔴"} TU TURNO — ATACÁS`;
+      $("miniTurnText").textContent="Tocá IZQUIERDA, CENTRO o DERECHA directamente en la cancha.";
+      buttons.forEach(btn=>btn.disabled=false);
+    }else{
+      $("miniTurnTitle").textContent=`⏳ ${teamName(attacker)} está eligiendo por dónde avanzar`;
+      $("miniTurnText").textContent="Esperando la elección del rival...";
+      showBall=false;
+    }
+  }else if(mini.phase==="defense"){
+    if(isAttacker){
+      displayLane=mini.attackPick;
+      displayProgress=(mini.progress||0)+1;
+      preview=true;
+      $("miniTurnTitle").textContent="✅ AVANCE ELEGIDO — ESPERANDO DEFENSA";
+      $("miniTurnText").textContent="Vos ves la trayectoria elegida. Tu rival todavía no ve la pelota.";
+      const selected=buttons.find(b=>b.dataset.miniLane===mini.attackPick);
+      if(selected) selected.classList.add(attacker==="A"?"touch-a":"touch-b");
+    }else if(isDefender){
+      showBall=false;
+      $("miniTurnTitle").textContent=`${defender==="A"?"🔵":"🔴"} TU TURNO — DEFENDÉS`;
+      $("miniTurnText").textContent="La pelota está oculta. Tocá el sector que pensás que eligió el rival.";
+      buttons.forEach(btn=>btn.disabled=false);
+    }
+  }else if(mini.phase==="resolved"){
+    const res=mini.resolution||{};
+    displayLane=res.attackLane||mini.currentLane||"center";
+    displayProgress=res.type==="recovery"?(mini.progress||0)+1:(mini.progress||0);
+    $("miniTurnTitle").textContent=res.type==="goal"?"⚽ GOL":res.type==="recovery"?"🛡️ RECUPERACIÓN":"🏃 AVANZA";
+    $("miniTurnText").textContent="La jugada continúa automáticamente.";
+    const attackBtn=buttons.find(b=>b.dataset.miniLane===res.attackLane);
+    const defenseBtn=buttons.find(b=>b.dataset.miniLane===res.defenseLane);
+    if(attackBtn) attackBtn.classList.add(attacker==="A"?"touch-a":"touch-b");
+    if(defenseBtn) defenseBtn.classList.add(defender==="A"?"touch-a":"touch-b");
+    mark.style.left=miniLaneX(res.defenseLane)+'%';
+    mark.style.bottom=(100-miniProgressY(displayProgress,needed))+'%';
+    mark.classList.remove("hidden");
+
+    if(lastMiniFlashId!==res.id){
+      lastMiniFlashId=res.id;
+      const flash=$("miniEventFlash");
+      flash.textContent=res.type==="goal"?"⚽ GOL":res.type==="recovery"?"💥 RECUPERACIÓN":"🏃 AVANZA";
+      flash.classList.remove("show");
+      void flash.offsetWidth;
+      flash.classList.add("show");
+    }
+
+    if(miniResolutionTimer) clearTimeout(miniResolutionTimer);
+    miniResolutionTimer=setTimeout(()=>{
+      miniResolutionTimer=null;
+      advanceMiniAfterResolution(res.id);
+    },1150);
+  }
+
+  ball.style.left=miniLaneX(displayLane)+'%';
+  ball.style.bottom=(100-miniProgressY(displayProgress,needed))+'%';
+  ball.classList.toggle("invisible",!showBall);
+  renderMiniTrail(mini,preview);
+}
+
+function rootMiniButtons(){
+  return document.querySelectorAll("#miniMatch [data-mini-lane]");
+}
+
 function buildMatchResult(state){
   const A=calculateTeamFromState(state,"A");
   const B=calculateTeamFromState(state,"B");
@@ -2106,14 +2650,7 @@ function buildMatchResult(state){
 }
 
 async function playMatch(){
-  await mutateGame((state)=>{
-    if(teamEntries(state,"A").length!==5 || teamEntries(state,"B").length!==5) return false;
-    if(state.result) return false;
-    state.result=buildMatchResult(state);
-    state.status="finished";
-    state.message="🏆 Partido finalizado.";
-    return true;
-  });
+  await ensureMiniMatch();
 }
 
 async function resetGame(){
@@ -2125,6 +2662,11 @@ async function resetGame(){
     clearTimeout(autoMatchTimer);
     autoMatchTimer=null;
   }
+  if(miniResolutionTimer){
+    clearTimeout(miniResolutionTimer);
+    miniResolutionTimer=null;
+  }
+  lastMiniFlashId=null;
   await mutateGame((state,team)=>{
     if(team!=="A"){state.message="Solo el Equipo A puede reiniciar la partida.";return true;}
     const seed=nextSeed(state.rngSeed||Date.now());
@@ -2410,13 +2952,11 @@ function updateScreen(){
     $("gameArea").classList.add("hidden");
     $("teamIntro").classList.add("hidden");
     $("resultCard").classList.add("hidden");
-    $("matchAnimation").classList.remove("hidden");
+    $("matchAnimation").classList.add("hidden");
+    if($("miniMatch")) $("miniMatch").classList.remove("hidden");
 
-    if(!autoMatchTimer){
-      autoMatchTimer=setTimeout(async()=>{
-        autoMatchTimer=null;
-        await playMatch();
-      },2200);
+    if(!gameState.miniMatch){
+      ensureMiniMatch();
     }
   } else if(hasResult){
     if(teamIntroTimer){
@@ -2427,9 +2967,14 @@ function updateScreen(){
       clearTimeout(autoMatchTimer);
       autoMatchTimer=null;
     }
+    if(miniResolutionTimer){
+      clearTimeout(miniResolutionTimer);
+      miniResolutionTimer=null;
+    }
     $("gameArea").classList.add("hidden");
     $("teamIntro").classList.add("hidden");
     $("matchAnimation").classList.add("hidden");
+    if($("miniMatch")) $("miniMatch").classList.add("hidden");
   } else {
     if(autoMatchTimer){
       clearTimeout(autoMatchTimer);
@@ -2465,6 +3010,7 @@ function updateScreen(){
   }
 
   if(openedMiniTeam) renderMiniTeam(openedMiniTeam);
+  renderMiniMatch();
   renderResult(); updateBackground();
 }
 
@@ -2842,6 +3388,7 @@ function enterGameScreen(state){
     $("gameArea").classList.add("hidden");
     $("teamIntro").classList.add("hidden");
     $("matchAnimation").classList.add("hidden");
+    if($("miniMatch")) $("miniMatch").classList.add("hidden");
     $("resultCard").classList.add("hidden");
   }
 
@@ -2872,7 +3419,8 @@ function enterGameScreen(state){
         teamEntries(gameState,"B").length===5
       ){
         $("gameArea").classList.add("hidden");
-        $("matchAnimation").classList.remove("hidden");
+        $("matchAnimation").classList.add("hidden");
+        if($("miniMatch")) $("miniMatch").classList.remove("hidden");
       } else {
         $("gameArea").classList.remove("hidden");
       }
@@ -2931,6 +3479,11 @@ function leaveRoom(clearUrl=true){
     clearTimeout(autoMatchTimer);
     autoMatchTimer=null;
   }
+  if(miniResolutionTimer){
+    clearTimeout(miniResolutionTimer);
+    miniResolutionTimer=null;
+  }
+  lastMiniFlashId=null;
   const oldRoomCode=roomCode;
   const wasOpen=currentRoomIsOpen;
   const wasWaiting=gameState?.status==="waiting";
@@ -2973,6 +3526,9 @@ $("bidMinus").addEventListener("click",()=>changeBid(-1));
 $("bidPlus").addEventListener("click",()=>changeBid(1));
 $("offerButton").addEventListener("click",makeBid);
 $("passButton").addEventListener("click",passBid);
+rootMiniButtons().forEach(button=>{
+  button.addEventListener("click",()=>chooseMiniLane(button.dataset.miniLane));
+});
 $("revengeButton").addEventListener("click",resetGame);
 $("leaveRoomButton").addEventListener("click",()=>leaveRoom(true));
 
