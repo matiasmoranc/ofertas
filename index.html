@@ -1539,7 +1539,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.09</p>
+     <p style="font-size:.7rem;color:grey;">v 0.10</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -2459,15 +2459,38 @@ function formatGoalScorers(names){
 }
 
 function teamRatingAverageFromState(state,team){
-  const ratings=teamEntries(state,team)
-    .map(entry=>playerByIndex(entry.playerIndex)?.rating)
+  const entries=teamEntries(state,team);
+
+  const squad=entries
+    .map(entry=>playerByIndex(entry.playerIndex))
+    .filter(Boolean);
+
+  const ratings=squad
+    .map(player=>player.rating)
     .filter(Number.isFinite);
 
   if(!ratings.length) return 0;
 
-  const rawAverage=ratings.reduce((sum,value)=>sum+value,0)/ratings.length;
+  // Media normal de los jugadores
+  const rawAverage=
+    ratings.reduce((sum,value)=>sum+value,0)/ratings.length;
+
+  // Penalización por plantel incompleto
   const squadFactor=clamp(ratings.length/5,0,1);
-  return rawAverage*squadFactor;
+
+  let media=rawAverage*squadFactor;
+
+  // Revisar posiciones
+  const hasDL=squad.some(player=>player.pos==="DL");
+  const hasMD=squad.some(player=>player.pos==="MD");
+  const hasDF=squad.some(player=>player.pos==="DF");
+
+  // Penalizaciones que afectan la media del minipartido
+  if(!hasDL) media-=4.5;
+  if(!hasMD) media-=3.75;
+  if(!hasDF) media-=4.5;
+
+  return clamp(media,0,99);
 }
 
 function buildMiniMatchState(state){
@@ -2491,7 +2514,7 @@ function buildMiniMatchState(state){
   }else if(better && diff<=4.5){
     attackLimit[better]=4;
     attackLimit[otherPlayer(better)]=2;
-    advancesNeeded[better]=2;
+    advancesNeeded[better]=1;
     advancesNeeded[otherPlayer(better)]=5;
   }else if(better){
     attackLimit[better]=5;
