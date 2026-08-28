@@ -1539,7 +1539,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.10</p>
+     <p style="font-size:.7rem;color:grey;">v 0.11</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -3011,23 +3011,15 @@ function renderResult(){
   $("midStats").textContent=`${Math.round(r.A.midfield)} / ${Math.round(r.B.midfield)}`;
   $("defStats").textContent=`${Math.round(r.A.defense)} / ${Math.round(r.B.defense)}`;
   $("gkStats").textContent=`${Math.round(r.A.goalkeeper)} / ${Math.round(r.B.goalkeeper)}`;
-  const mediaEquipo = (team) => {
-    const entries = teamEntries(gameState, team);
-    if(!entries.length) return 0;
-
-    const ratings = entries
-      .map(entry => players[entry.playerIndex]?.rating)
-      .filter(rating => Number.isFinite(rating));
-
-    if(!ratings.length) return 0;
-    return ratings.reduce((total, rating) => total + rating, 0) / ratings.length;
-  };
-
-  const mediaA = mediaEquipo("A");
-  const mediaB = mediaEquipo("B");
+  // Una única media para todo el juego:
+  // promedio de ratings + penalización por plantel incompleto
+  // + penalización por faltar DL / MD / DF.
+  // Es exactamente la misma media usada para dar ventajas en el minipartido.
+  const mediaA = teamRatingAverageFromState(gameState,"A");
+  const mediaB = teamRatingAverageFromState(gameState,"B");
 
   $("probabilityText").textContent =
-    `MEDIA TOTAL — 🔵 AZUL: ${mediaA.toFixed(1)} | 🔴 ROJO: ${mediaB.toFixed(1)}`;
+    `🔵 ${mediaA.toFixed(1)}  ·  🔴 ${mediaB.toFixed(1)}`;
   $("goalScorersA").textContent=r.goalsA ? formatGoalScorers(r.scorersA) : "";
   $("goalScorersB").textContent=r.goalsB ? formatGoalScorers(r.scorersB) : "";
   renderPlayerValues("A");
