@@ -552,7 +552,7 @@ header p{
 @media(max-width:500px){
 
   .app{
-    padding:12px;
+    padding:0px;
   }
 
   header h1{
@@ -894,16 +894,17 @@ header p{
   color:#ffd45c;
   font-size:10px;
   font-weight:900;
+  display: none;
   letter-spacing:2px;
 }
-.mini-match-head h2{margin:6px 0 4px;font-size:25px;}
-.mini-match-sub{color:#91a39a;font-size:11px;line-height:1.4;}
+.mini-match-head h2{margin:6px 0 4px;font-size:18px;}
+.mini-match-sub{color:#91a39a;font-size:11px;line-height:1.4;display: none;}
 .mini-match-score{
   display:flex;
   justify-content:center;
   gap:16px;
   margin-top:10px;
-  font-size:22px;
+  font-size:28px;
   font-weight:900;
 }
 .mini-match-info{
@@ -931,7 +932,7 @@ header p{
 }
 
 .mini-match-team-info.my-mini-team{
-  margin-top:8px;
+  margin-top:0px;
 }
 .mini-match-team-info.my-mini-team:before{
   content:"TU EQUIPO";
@@ -991,14 +992,17 @@ header p{
   width:15px;
   height:15px;
   border-radius:50%;
-  border:2px solid rgba(255,255,255,.76);
-  background:rgba(255,255,255,.86);
-  box-shadow:0 0 7px rgba(255,255,255,.22);
+  background-color: #0000004f;
+  border-color:rgba(255,255,255,.28);
+  box-shadow: 0 0 3px rgb(255 255 255);
+  
 }
 .mini-attack-dot.used{
   background:transparent;
-  border-color:rgba(255,255,255,.28);
   box-shadow:none;
+  box-shadow:0 0 7px rgba(255,255,255,.22);
+ border:2px solid rgba(255,255,255,.76);
+  background:rgba(255,255,255,.86);
 }
 .mini-advance-track{
   display:flex;
@@ -1171,7 +1175,7 @@ header p{
 @media(max-width:500px){
   .mini-pitch{height:360px;}
   .mini-match-head{padding:13px;}
-  .mini-match-head h2{font-size:21px;}
+  .mini-match-head h2{font-size:15px;}
   .mini-event-flash{min-width:205px;font-size:25px;}
 }
 @media(prefers-reduced-motion:reduce){
