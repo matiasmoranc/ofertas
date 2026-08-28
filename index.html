@@ -187,7 +187,7 @@ header p{
 }
 
 .turn-money{
-  padding:9px;
+  padding:8px;
   border-radius:12px;
   background:rgba(0,0,0,.30);
   cursor:pointer;
@@ -568,7 +568,7 @@ header p{
   }
 
   .turn-money strong{
-    font-size:16px;
+    font-size:25px;
   }
 
   .turn-badge{
@@ -1539,7 +1539,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.11</p>
+     <p style="font-size:.7rem;color:grey;">v 0.12</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -2549,7 +2549,7 @@ async function ensureMiniMatch(){
   try{
     await mutateGame((state)=>{
       if(state.result || state.miniMatch) return false;
-      if(teamEntries(state,"A").length!==5 || teamEntries(state,"B").length!==5) return false;
+      if(!bothTeamsDoneBuildingState(state)) return false;
       state.status="mini_match";
       state.miniMatch=buildMiniMatchState(state);
       state.message="⚽ Comienza el mini partido.";
@@ -3156,10 +3156,10 @@ function updateScreen(){
     }
   }
 
-  const full=teamEntries(gameState,"A").length===5 && teamEntries(gameState,"B").length===5;
+  const marketFinished=bothTeamsDoneBuildingState(gameState);
   const hasResult=Boolean(gameState.result);
 
-  if(full && !hasResult){
+  if(marketFinished && !hasResult){
     $("gameArea").classList.add("hidden");
     $("teamIntro").classList.add("hidden");
     $("resultCard").classList.add("hidden");
@@ -3678,8 +3678,7 @@ function enterGameScreen(state){
       if(gameState?.result){
         $("gameArea").classList.add("hidden");
       } else if(
-        teamEntries(gameState,"A").length===5 &&
-        teamEntries(gameState,"B").length===5
+        bothTeamsDoneBuildingState(gameState)
       ){
         $("gameArea").classList.add("hidden");
         $("matchAnimation").classList.add("hidden");
