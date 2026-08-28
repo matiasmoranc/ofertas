@@ -913,6 +913,7 @@ header p{
   margin-top:10px;
 }
 .mini-match-team-info{
+  position:relative;
   padding:11px 10px 10px;
   border-radius:13px;
   font-size:10px;
@@ -928,6 +929,31 @@ header p{
   background:linear-gradient(145deg,rgba(165,31,50,.90),rgba(84,13,24,.96));
   box-shadow:0 0 14px rgba(255,113,130,.18),inset 0 0 18px rgba(0,0,0,.14);
 }
+
+.mini-match-team-info.my-mini-team{
+  margin-top:8px;
+}
+.mini-match-team-info.my-mini-team:before{
+  content:"TU EQUIPO";
+  position:absolute;
+  top:-10px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:2px 8px;
+  border-radius:999px;
+  background:#07100b;
+  color:white;
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 3px 9px rgba(0,0,0,.35);
+  font-size:7px;
+  line-height:1.35;
+  font-weight:900;
+  letter-spacing:.8px;
+  white-space:nowrap;
+  z-index:3;
+}
+.mini-match-team-info.team-a.my-mini-team:before{color:#8ec9ff;}
+.mini-match-team-info.team-b.my-mini-team:before{color:#ff9a9a;}
 .mini-media-value{
   font-size:18px;
   line-height:1;
@@ -1508,7 +1534,6 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-   <p style="font-size:.7rem;color:grey;">v 0.04</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -2667,11 +2692,13 @@ function renderMiniMatch(){
       </div>
       <div class="mini-visual-row">
         <span class="mini-visual-label">AL GOL</span>
-        <div class="mini-advance-track">${advanceSteps}<span class="mini-goal-mark">🥅</span></div>
+        <div class="mini-advance-track">${advanceSteps}</div>
       </div>`;
   };
   $("miniInfoA").innerHTML=miniTeamPanelHTML("A");
   $("miniInfoB").innerHTML=miniTeamPanelHTML("B");
+  $("miniInfoA").classList.toggle("my-mini-team",myTeam==="A");
+  $("miniInfoB").classList.toggle("my-mini-team",myTeam==="B");
   $("miniMatchSub").textContent=`Ataque ${attackNo}/${limit} · ${mini.progress||0}/${needed} avances`;
 
   const buttons=[...rootMiniButtons()];
