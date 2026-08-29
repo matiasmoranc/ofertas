@@ -1712,35 +1712,31 @@ header p{
 /* =========================
    ESPECTADORES EN VIVO
 ========================= */
+.spectator-counter-row{
+  width:min(800px,100%);
+  margin:0 auto 5px;
+  display:flex;
+  justify-content:flex-end;
+  padding:0 4px;
+}
 .spectator-counter{
-  position:fixed;
-  right:12px;
-  top:12px;
-  z-index:2500;
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  padding:8px 11px;
-  border-radius:999px;
-  background:rgba(5,15,10,.92);
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 8px 28px rgba(0,0,0,.32);
-  color:#fff;
-  font-size:11px;
-  font-weight:900;
-  white-space:nowrap;
-  backdrop-filter:blur(8px);
-}
-.spectator-counter .spectator-label{
-  color:#b9c6bf;
+  gap:3px;
+  padding:3px 6px;
+  border-radius:7px;
+  background:rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.09);
+  color:#aebbb3;
   font-size:9px;
-  letter-spacing:.5px;
+  font-weight:900;
+  line-height:1;
 }
 .spectator-counter strong{
-  min-width:12px;
+  min-width:8px;
+  color:#dce5df;
+  font-size:9px;
   text-align:center;
-  color:#baff42;
-  font-size:13px;
 }
 
 .spectator-toast{
@@ -1828,7 +1824,9 @@ header p{
     <div>Sala <strong id="gameRoomCode">------</strong></div>
     <div id="myTeamPill" class="my-team-pill">Equipo ?</div>
   </div>
-  <div id="spectatorCounter" class="spectator-counter" title="Espectadores conectados">👁 <span class="spectator-label">ESPECTADORES</span> <strong id="spectatorCount">0</strong></div>
+  <div class="spectator-counter-row">
+    <div id="spectatorCounter" class="spectator-counter" title="Espectadores conectados">👁 <strong id="spectatorCount">0</strong></div>
+  </div>
   <div id="spectatorToast" class="spectator-toast" aria-live="polite">👁 Entró un espectador</div>
 
   <section id="waitingOpponent" class="waiting-opponent hidden" aria-live="polite">
@@ -2290,6 +2288,7 @@ const spectatorSessionId =
 
 const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
 const OPEN_ROOM_MAX_AGE = 5 * 60 * 1000;
+const PLAYING_ROOM_MAX_INACTIVITY = 5 * 60 * 1000;
 const OPEN_ROOM_CLEANUP_INTERVAL = 15 * 1000;
 let autoMatchTimer = null;
 let teamIntroTimer = null;
@@ -2526,7 +2525,21 @@ async function mutateGame(mutator){
       const changed=mutator(next,team);
       return changed===false ? undefined : next;
     },{applyLocally:false});
-    if(!result.committed) console.log("Acción no aplicada");
+    if(!result.committed){
+      console.log("Acción no aplicada");
+    }else{
+      /* Si esta partida pertenece a una mesa abierta, cada acción real
+         renueva su actividad. No creamos registros para partidas privadas. */
+      try{
+        const openRef=ref(db,`openRooms/${roomCode}`);
+        const openSnap=await get(openRef);
+        if(openSnap.exists()){
+          await update(openRef,{lastActivity:Date.now()});
+        }
+      }catch(activityError){
+        console.warn("No se pudo actualizar la actividad de la mesa:",activityError);
+      }
+    }
   }catch(error){
     console.error(error);
     $("message").textContent="Error de conexión. Intentá nuevamente.";
@@ -3624,20 +3637,31 @@ async function deleteExpiredOpenRoom(code,roomData){
   if(!db || !code) return;
 
   try{
-    /* Quitamos primero la publicación para que desaparezca del lobby. */
-    await remove(ref(db,`openRooms/${code}`));
+    /* Volvemos a leer la mesa antes de borrarla para evitar eliminar una
+       partida que justo recibió una acción mientras el lobby la revisaba. */
+    const openRef=ref(db,`openRooms/${code}`);
+    const latestSnap=await get(openRef);
+    if(!latestSnap.exists()) return;
 
-    /* Si la partida sigue esperando rival, también eliminamos el game
-       para no dejar salas huérfanas acumulándose en Firebase. */
-    const gameRef=ref(db,`games/${code}`);
-    const gameSnap=await get(gameRef);
+    const latest=latestSnap.val() || roomData || {};
+    const now=Date.now();
+    const isPlaying=latest.status==="playing";
 
-    if(gameSnap.exists()){
-      const state=gameSnap.val();
-      if(state.status==="waiting" && !state.playerBUid){
-        await remove(gameRef);
-      }
-    }
+    const activityBase=isPlaying
+      ? Number(latest.lastActivity || latest.startedAt || latest.createdAt || 0)
+      : Number(latest.createdAt || 0);
+
+    const maxAge=isPlaying
+      ? PLAYING_ROOM_MAX_INACTIVITY
+      : OPEN_ROOM_MAX_AGE;
+
+    if(!activityBase || (now-activityBase)<maxAge) return;
+
+    /* Primero desaparece del lobby y después borramos el estado de juego.
+       Esto aplica tanto a una mesa esperando rival como a una partida con
+       dos jugadores que quedó abandonada sin acciones durante 5 minutos. */
+    await remove(openRef);
+    await remove(ref(db,`games/${code}`));
   }catch(error){
     console.warn("No se pudo limpiar la mesa vencida",code,error);
   }
@@ -3657,7 +3681,16 @@ function renderOpenRooms(openRooms){
 
       const createdAt=Number(room.createdAt || 0);
       const isPlaying=room.status==="playing";
-      const expired=!isPlaying && createdAt>0 && (now-createdAt)>=OPEN_ROOM_MAX_AGE;
+
+      const activityBase=isPlaying
+        ? Number(room.lastActivity || room.startedAt || createdAt || 0)
+        : createdAt;
+
+      const maxAge=isPlaying
+        ? PLAYING_ROOM_MAX_INACTIVITY
+        : OPEN_ROOM_MAX_AGE;
+
+      const expired=activityBase>0 && (now-activityBase)>=maxAge;
 
       if(expired){
         deleteExpiredOpenRoom(room.code,room);
@@ -3761,6 +3794,7 @@ async function createOpenRoom(){
         roomCode:code,
         ownerUid:uid,
         createdAt:Date.now(),
+        lastActivity:Date.now(),
         status:"waiting"
       });
 
@@ -4042,7 +4076,8 @@ async function joinRoom(forcedCode=null, fromOpenRoom=false){
       try{
         await update(ref(db,`openRooms/${code}`),{
           status:"playing",
-          startedAt:Date.now()
+          startedAt:Date.now(),
+          lastActivity:Date.now()
         });
       }catch(error){
         console.warn("No se pudo marcar la mesa como partido en juego:",error);
