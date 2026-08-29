@@ -1639,13 +1639,63 @@ header p{
   font-size:10px;
 }
 
+/* =========================
+   ESPECTADORES EN VIVO
+========================= */
+.spectator-counter{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:6px 9px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  color:#dce6e0;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.spectator-toast{
+  position:fixed;
+  top:14px;
+  left:50%;
+  z-index:3000;
+  transform:translate(-50%,-18px);
+  padding:10px 15px;
+  border-radius:999px;
+  background:rgba(5,15,10,.96);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 12px 35px rgba(0,0,0,.38);
+  color:white;
+  font-size:12px;
+  font-weight:900;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease,transform .22s ease;
+}
+
+.spectator-toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+@media(max-width:500px){
+  .spectator-toast{
+    top:10px;
+    max-width:calc(100% - 24px);
+    text-align:center;
+    font-size:11px;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.12</p>
+     <p style="font-size:.7rem;color:grey;">v 0.13</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -1689,8 +1739,10 @@ header p{
   <div id="connectionBar" class="connection-bar">
     <div><span id="connectionDot" class="connection-dot"></span><span id="connectionText">Conectando...</span></div>
     <div>Sala <strong id="gameRoomCode">------</strong></div>
+    <div id="spectatorCounter" class="spectator-counter" title="Espectadores conectados">👁 <span id="spectatorCount">0</span></div>
     <div id="myTeamPill" class="my-team-pill">Equipo ?</div>
   </div>
+  <div id="spectatorToast" class="spectator-toast" aria-live="polite">👁 Entró un espectador</div>
 
   <section id="waitingOpponent" class="waiting-opponent hidden" aria-live="polite">
     <div class="waiting-opponent-icon">⏳</div>
@@ -1892,7 +1944,7 @@ header p{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import { getDatabase, ref, get, update, onValue, runTransaction, remove, set } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, runTransaction, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 /* =================================================
    1) PEGÁ ACÁ TU CONFIGURACIÓN DE FIREBASE
@@ -2135,8 +2187,22 @@ let openedMiniTeam = null;
 let lastAuctionKey = "";
 let unsubscribeOpenRooms = null;
 let currentRoomIsOpen = false;
+let latestOpenRooms = {};
+let openRoomsCleanupTimer = null;
+
+let unsubscribeSpectators = null;
+let spectatorPresenceRef = null;
+let spectatorDisconnectHandle = null;
+let lastSpectatorCount = null;
+let spectatorToastTimer = null;
+const spectatorSessionId =
+  (globalThis.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
 const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
 const OPEN_ROOM_MAX_AGE = 5 * 60 * 1000;
+const OPEN_ROOM_CLEANUP_INTERVAL = 15 * 1000;
 let autoMatchTimer = null;
 let teamIntroTimer = null;
 let hasShownTeamIntro = false;
@@ -3547,15 +3613,25 @@ function renderOpenRooms(openRooms){
 function listenToOpenRooms(){
   if(!db) return;
   if(unsubscribeOpenRooms) unsubscribeOpenRooms();
+  if(openRoomsCleanupTimer) clearInterval(openRoomsCleanupTimer);
 
   unsubscribeOpenRooms=onValue(
     ref(db,"openRooms"),
-    snapshot=>renderOpenRooms(snapshot.val() || {}),
+    snapshot=>{
+      latestOpenRooms=snapshot.val() || {};
+      renderOpenRooms(latestOpenRooms);
+    },
     error=>{
       console.error("Error cargando mesas abiertas:",error);
       if($("openRoomsList")) $("openRoomsList").innerHTML='<div class="open-room-empty">No se pudieron cargar las mesas.</div>';
     }
   );
+
+  /* Importante: aunque Firebase no mande ningún cambio nuevo, volvemos a
+     evaluar la antigüedad para sacar mesas abandonadas al cumplir 5 minutos. */
+  openRoomsCleanupTimer=setInterval(()=>{
+    renderOpenRooms(latestOpenRooms || {});
+  },OPEN_ROOM_CLEANUP_INTERVAL);
 }
 
 async function createOpenRoom(){
@@ -3624,6 +3700,97 @@ async function joinOpenRoom(code){
 }
 
 
+
+function showSpectatorToast(amount=1){
+  const toast=$("spectatorToast");
+  if(!toast) return;
+
+  toast.textContent=amount>1
+    ? `👁 Entraron ${amount} espectadores`
+    : "👁 Entró un espectador";
+
+  toast.classList.remove("show");
+  void toast.offsetWidth;
+  toast.classList.add("show");
+
+  if(spectatorToastTimer) clearTimeout(spectatorToastTimer);
+  spectatorToastTimer=setTimeout(()=>{
+    toast.classList.remove("show");
+  },2200);
+}
+
+function stopSpectatorListener(){
+  if(unsubscribeSpectators){
+    unsubscribeSpectators();
+    unsubscribeSpectators=null;
+  }
+  lastSpectatorCount=null;
+  if($("spectatorCount")) $("spectatorCount").textContent="0";
+}
+
+function listenToSpectators(code){
+  stopSpectatorListener();
+  if(!db || !code) return;
+
+  unsubscribeSpectators=onValue(
+    ref(db,`spectators/${code}`),
+    snapshot=>{
+      const data=snapshot.val() || {};
+      const count=Object.keys(data).length;
+
+      if($("spectatorCount")) $("spectatorCount").textContent=String(count);
+
+      /* No mostramos el aviso al espectador que acaba de entrar.
+         Los jugadores sí ven el popup cuando el número aumenta. */
+      if(
+        lastSpectatorCount!==null &&
+        count>lastSpectatorCount &&
+        !isSpectator
+      ){
+        showSpectatorToast(count-lastSpectatorCount);
+      }
+
+      lastSpectatorCount=count;
+    },
+    error=>console.warn("No se pudo leer espectadores:",error)
+  );
+}
+
+async function startSpectatorPresence(code){
+  if(!db || !code || !isSpectator) return;
+
+  /* Si veníamos mirando otra sala, limpiamos primero la presencia anterior. */
+  if(spectatorPresenceRef){
+    try{ await remove(spectatorPresenceRef); }catch{}
+    spectatorPresenceRef=null;
+  }
+  if(spectatorDisconnectHandle){
+    try{ await spectatorDisconnectHandle.cancel(); }catch{}
+    spectatorDisconnectHandle=null;
+  }
+
+  spectatorPresenceRef=ref(db,`spectators/${code}/${spectatorSessionId}`);
+
+  /* Firebase elimina automáticamente este espectador si cierra la pestaña,
+     pierde conexión o abandona la partida. */
+  spectatorDisconnectHandle=onDisconnect(spectatorPresenceRef);
+  await spectatorDisconnectHandle.remove();
+  await set(spectatorPresenceRef,{
+    joinedAt:Date.now()
+  });
+}
+
+async function stopSpectatorPresence(){
+  if(spectatorDisconnectHandle){
+    try{ await spectatorDisconnectHandle.cancel(); }catch{}
+    spectatorDisconnectHandle=null;
+  }
+  if(spectatorPresenceRef){
+    try{ await remove(spectatorPresenceRef); }catch{}
+    spectatorPresenceRef=null;
+  }
+}
+
 async function watchOpenRoom(code){
   const normalized=normalizeCode(code);
   if(normalized.length!==6 || !db) return;
@@ -3650,6 +3817,7 @@ async function watchOpenRoom(code){
     enterGameScreen(state);
     updateScreen();
     listenToRoom(normalized);
+    await startSpectatorPresence(normalized);
   }catch(error){
     console.error("Error mirando la sala:",error);
     setLobbyMessage(error.message || "No se pudo abrir el partido.",true);
@@ -3896,6 +4064,7 @@ function enterGameScreen(state){
 
 function listenToRoom(code){
   if(unsubscribeGame) unsubscribeGame();
+  listenToSpectators(code);
   const roomRef=ref(db,`games/${code}`);
   unsubscribeGame=onValue(roomRef,snapshot=>{
     const state=snapshot.val();
@@ -3948,6 +4117,7 @@ async function tryResumeFromUrl(){
       hasShownTeamIntro=true;
       gameState=state;
       listenToRoom(code);
+      await startSpectatorPresence(code);
       return;
     }
   }
@@ -3989,6 +4159,14 @@ function leaveRoom(clearUrl=true){
 
   if(unsubscribeGame) unsubscribeGame();
   unsubscribeGame=null;
+
+  stopSpectatorListener();
+  stopSpectatorPresence().catch(()=>{});
+  if(spectatorToastTimer){
+    clearTimeout(spectatorToastTimer);
+    spectatorToastTimer=null;
+  }
+  if($("spectatorToast")) $("spectatorToast").classList.remove("show");
 
   if(db && oldRoomCode && wasOpen && wasWaiting && wasTeamA){
     remove(ref(db,`openRooms/${oldRoomCode}`)).catch(error=>console.warn("No se pudo quitar la mesa abierta:",error));
