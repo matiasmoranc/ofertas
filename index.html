@@ -1234,6 +1234,76 @@ header p{
   font-size:12px;
   line-height:1.45;
 }
+.mini-briefing-scores{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:stretch;
+  gap:10px;
+  margin:16px 0 10px;
+}
+.mini-briefing-score{
+  position:relative;
+  padding:13px 9px 12px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.15);
+  text-align:center;
+  overflow:visible;
+}
+.mini-briefing-score.blue{
+  background:linear-gradient(145deg,rgba(13,95,168,.88),rgba(7,48,84,.96));
+  box-shadow:0 0 18px rgba(99,183,255,.16);
+}
+.mini-briefing-score.red{
+  background:linear-gradient(145deg,rgba(165,31,50,.9),rgba(84,13,24,.96));
+  box-shadow:0 0 18px rgba(255,113,130,.16);
+}
+.mini-briefing-score.mine{
+  border-width:2px;
+  box-shadow:0 0 0 2px rgba(255,255,255,.10),0 0 22px rgba(255,255,255,.12);
+}
+.mini-briefing-score.mine:before{
+  content:"TU EQUIPO";
+  position:absolute;
+  top:-9px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:2px 7px;
+  border-radius:999px;
+  background:#07100b;
+  border:1px solid rgba(255,255,255,.18);
+  color:white;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.7px;
+  white-space:nowrap;
+}
+.mini-briefing-score-name{
+  display:block;
+  margin-bottom:4px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px;
+  opacity:.85;
+}
+.mini-briefing-score-value{
+  display:block;
+  font-size:30px;
+  line-height:1;
+  font-weight:900;
+}
+.mini-briefing-vs{
+  align-self:center;
+  color:#87988e;
+  font-size:10px;
+  font-weight:900;
+}
+.mini-briefing-difference{
+  margin:7px 0 0;
+  color:#a9b7af;
+  font-size:11px;
+  font-weight:800;
+}
+
 .mini-briefing-button{
   width:100%;
   border:0;
@@ -1643,17 +1713,34 @@ header p{
    ESPECTADORES EN VIVO
 ========================= */
 .spectator-counter{
+  position:fixed;
+  right:12px;
+  top:12px;
+  z-index:2500;
   display:inline-flex;
   align-items:center;
-  gap:5px;
-  padding:6px 9px;
+  gap:6px;
+  padding:8px 11px;
   border-radius:999px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.12);
-  color:#dce6e0;
-  font-size:10px;
+  background:rgba(5,15,10,.92);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 8px 28px rgba(0,0,0,.32);
+  color:#fff;
+  font-size:11px;
   font-weight:900;
   white-space:nowrap;
+  backdrop-filter:blur(8px);
+}
+.spectator-counter .spectator-label{
+  color:#b9c6bf;
+  font-size:9px;
+  letter-spacing:.5px;
+}
+.spectator-counter strong{
+  min-width:12px;
+  text-align:center;
+  color:#baff42;
+  font-size:13px;
 }
 
 .spectator-toast{
@@ -1695,7 +1782,7 @@ header p{
 <div class="app">
 <header>
   <h1>MERCADO ÉLITE 5 ⚽</h1>
-     <p style="font-size:.7rem;color:grey;">v 0.13</p>
+     <p style="font-size:.7rem;color:grey;">v 0.15</p>
 </header>
 
 <section id="lobbyScreen" class="lobby-wrap">
@@ -1739,9 +1826,9 @@ header p{
   <div id="connectionBar" class="connection-bar">
     <div><span id="connectionDot" class="connection-dot"></span><span id="connectionText">Conectando...</span></div>
     <div>Sala <strong id="gameRoomCode">------</strong></div>
-    <div id="spectatorCounter" class="spectator-counter" title="Espectadores conectados">👁 <span id="spectatorCount">0</span></div>
     <div id="myTeamPill" class="my-team-pill">Equipo ?</div>
   </div>
+  <div id="spectatorCounter" class="spectator-counter" title="Espectadores conectados">👁 <span class="spectator-label">ESPECTADORES</span> <strong id="spectatorCount">0</strong></div>
   <div id="spectatorToast" class="spectator-toast" aria-live="polite">👁 Entró un espectador</div>
 
   <section id="waitingOpponent" class="waiting-opponent hidden" aria-live="polite">
@@ -1842,6 +1929,7 @@ header p{
       <div id="miniBriefingIcon" class="mini-briefing-icon">⚽</div>
       <div class="mini-briefing-kicker">EQUIPOS LISTOS</div>
       <div id="miniBriefingTitle" class="mini-briefing-title">Preparando partido...</div>
+      <div id="miniBriefingScores" class="mini-briefing-scores"></div>
       <div id="miniBriefingDetail" class="mini-briefing-detail"></div>
       <div id="miniBriefingRule" class="mini-briefing-rule"></div>
       <button id="miniBriefingButton" class="mini-briefing-button" type="button">ENTENDIDO — JUGAR</button>
@@ -2762,20 +2850,32 @@ function renderMiniBriefing(){
 
   let icon="⚖️";
   let title="PARTIDO PAREJO";
-  let detail=`Tu media es ${myMedia.toFixed(1)} y la del rival ${rivalMedia.toFixed(1)}.`;
   if(myMedia>rivalMedia){
     icon="🔥";
     title="TU EQUIPO TIENE VENTAJA";
-    detail=`Tu media es ${myMedia.toFixed(1)} contra ${rivalMedia.toFixed(1)} del rival. La diferencia es ${diff.toFixed(1)}.`;
   }else if(myMedia<rivalMedia){
     icon="⚠️";
     title="TU EQUIPO TIENE DESVENTAJA";
-    detail=`Tu media es ${myMedia.toFixed(1)} contra ${rivalMedia.toFixed(1)} del rival. La diferencia es ${diff.toFixed(1)}.`;
   }
+
+  const blueMedia=Number(mini.media?.A||0);
+  const redMedia=Number(mini.media?.B||0);
+  const blueMine=mine==="A";
+  const redMine=mine==="B";
 
   $("miniBriefingIcon").textContent=icon;
   $("miniBriefingTitle").textContent=title;
-  $("miniBriefingDetail").textContent=detail;
+  $("miniBriefingScores").innerHTML=`
+    <div class="mini-briefing-score blue ${blueMine?"mine":""}">
+      <span class="mini-briefing-score-name">AZUL</span>
+      <strong class="mini-briefing-score-value">${blueMedia.toFixed(1)}</strong>
+    </div>
+    <div class="mini-briefing-vs">VS</div>
+    <div class="mini-briefing-score red ${redMine?"mine":""}">
+      <span class="mini-briefing-score-name">ROJO</span>
+      <strong class="mini-briefing-score-value">${redMedia.toFixed(1)}</strong>
+    </div>`;
+  $("miniBriefingDetail").innerHTML=`<div class="mini-briefing-difference">Diferencia de media: <strong>${diff.toFixed(1)}</strong></div>`;
   $("miniBriefingRule").innerHTML=`Vas a tener <strong>${myAttacks} ataques</strong> y necesitás <strong>${myAdvances} avance${myAdvances===1?"":"s"}</strong> para hacer gol.`;
   briefing.classList.remove("hidden");
 }
@@ -3733,7 +3833,7 @@ function listenToSpectators(code){
   if(!db || !code) return;
 
   unsubscribeSpectators=onValue(
-    ref(db,`spectators/${code}`),
+    ref(db,`openRooms/${code}/spectators`),
     snapshot=>{
       const data=snapshot.val() || {};
       const count=Object.keys(data).length;
@@ -3769,7 +3869,7 @@ async function startSpectatorPresence(code){
     spectatorDisconnectHandle=null;
   }
 
-  spectatorPresenceRef=ref(db,`spectators/${code}/${spectatorSessionId}`);
+  spectatorPresenceRef=ref(db,`openRooms/${code}/spectators/${spectatorSessionId}`);
 
   /* Firebase elimina automáticamente este espectador si cierra la pestaña,
      pierde conexión o abandona la partida. */
