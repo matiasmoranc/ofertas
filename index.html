@@ -2804,17 +2804,17 @@ function buildMiniMatchState(state){
     attackLimit[better]=4;
     attackLimit[otherPlayer(better)]=2;
     advancesNeeded[better]=2;
-    advancesNeeded[otherPlayer(better)]=5;
+    advancesNeeded[otherPlayer(better)]=3;
   }else if(better && diff<=4.5){
     attackLimit[better]=4;
     attackLimit[otherPlayer(better)]=2;
-    advancesNeeded[better]=1;
-    advancesNeeded[otherPlayer(better)]=5;
+    advancesNeeded[better]=2;
+    advancesNeeded[otherPlayer(better)]=4;
   }else if(better){
     attackLimit[better]=5;
     attackLimit[otherPlayer(better)]=2;
-    advancesNeeded[better]=1;
-    advancesNeeded[otherPlayer(better)]=5;
+    advancesNeeded[better]=2;
+    advancesNeeded[otherPlayer(better)]=4;
   }
 
   return {
