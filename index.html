@@ -2785,8 +2785,8 @@ function teamPositionPenaltiesFromState(state,team){
 
   const rules=[
     {pos:"DL",label:"delanteros",points:4.5},
-    {pos:"DF",label:"defensas",points:4.5},
-    {pos:"MD",label:"mediocampistas",points:3.75}
+    {pos:"DF",label:"defensas",points:5,
+    {pos:"MD",label:"mediocampistas",points:4}
   ];
 
   return rules.filter(rule=>!squad.some(player=>player.pos===rule.pos));
