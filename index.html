@@ -1142,7 +1142,7 @@ header p{
 .mini-trail-svg .trail-b{stroke:#ff7182;}
 .mini-turn-panel{
   width:min(560px,100%);
-  margin:10px auto 0;
+  margin:0 auto 10px;
   padding:13px;
   border-radius:14px;
   background:rgba(7,20,14,.96);
@@ -1980,6 +1980,11 @@ position: fixed;
       </div>
     </div>
 
+    <div class="mini-turn-panel">
+      <div id="miniTurnTitle" class="mini-turn-title">Preparando mini partido...</div>
+      <div id="miniTurnText" class="mini-turn-text"></div>
+    </div>
+
     <div id="miniPitch" class="mini-pitch">
       <div class="mini-goal">🥅</div>
       <div class="mini-step-line" style="top:27%"></div>
@@ -1999,11 +2004,6 @@ position: fixed;
       <button type="button" class="mini-lane-button left" data-mini-lane="left" aria-label="Elegir izquierda"></button>
       <button type="button" class="mini-lane-button center" data-mini-lane="center" aria-label="Elegir centro"></button>
       <button type="button" class="mini-lane-button right" data-mini-lane="right" aria-label="Elegir derecha"></button>
-    </div>
-
-    <div class="mini-turn-panel">
-      <div id="miniTurnTitle" class="mini-turn-title">Preparando mini partido...</div>
-      <div id="miniTurnText" class="mini-turn-text"></div>
     </div>
   </section>
 
