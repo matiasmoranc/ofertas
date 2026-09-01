@@ -1802,6 +1802,13 @@ position: fixed;
   }
 }
 
+/* En mobile, el título y la versión se muestran únicamente en el lobby. */
+@media(max-width:850px){
+  .app:has(#gameScreen:not(.screen-hidden)) > header{
+    display:none;
+  }
+}
+
 </style>
 </head>
 <body>
