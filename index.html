@@ -1303,6 +1303,32 @@ header p{
   font-size:11px;
   font-weight:800;
 }
+.mini-briefing-penalties{
+  display:grid;
+  gap:7px;
+  margin-top:12px;
+  text-align:left;
+}
+.mini-briefing-penalties-title{
+  color:#ffd45c;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px;
+  text-align:center;
+}
+.mini-briefing-penalty{
+  padding:9px 10px;
+  border-radius:10px;
+  background:rgba(255,181,71,.09);
+  border:1px solid rgba(255,181,71,.24);
+  color:#f3d9b3;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.35;
+}
+.mini-briefing-penalty.blue{border-left:4px solid #63b7ff;}
+.mini-briefing-penalty.red{border-left:4px solid #ff7182;}
+.mini-briefing-penalty strong{color:#ffd45c;}
 
 .mini-briefing-button{
   width:100%;
@@ -2752,6 +2778,20 @@ function formatGoalScorers(names){
     .join("\n");
 }
 
+function teamPositionPenaltiesFromState(state,team){
+  const squad=teamEntries(state,team)
+    .map(entry=>playerByIndex(entry.playerIndex))
+    .filter(Boolean);
+
+  const rules=[
+    {pos:"DL",label:"delanteros",points:4.5},
+    {pos:"DF",label:"defensas",points:4.5},
+    {pos:"MD",label:"mediocampistas",points:3.75}
+  ];
+
+  return rules.filter(rule=>!squad.some(player=>player.pos===rule.pos));
+}
+
 function teamRatingAverageFromState(state,team){
   const entries=teamEntries(state,team);
 
@@ -2892,7 +2932,25 @@ function renderMiniBriefing(){
       <span class="mini-briefing-score-name">ROJO</span>
       <strong class="mini-briefing-score-value">${redMedia.toFixed(1)}</strong>
     </div>`;
-  $("miniBriefingDetail").innerHTML=`<div class="mini-briefing-difference">Diferencia de media: <strong>${diff.toFixed(1)}</strong></div>`;
+  const penaltyNotices=["A","B"].flatMap(team=>
+    teamPositionPenaltiesFromState(gameState,team).map(penalty=>({
+      team,
+      label:penalty.label,
+      points:penalty.points
+    }))
+  );
+  const penaltiesHtml=penaltyNotices.length
+    ? `<div class="mini-briefing-penalties">
+        <div class="mini-briefing-penalties-title">⚠️ PENALIZACIONES</div>
+        ${penaltyNotices.map(penalty=>`
+          <div class="mini-briefing-penalty ${penalty.team==="A"?"blue":"red"}">
+            Equipo ${teamName(penalty.team)}: <strong>−${String(penalty.points).replace(".",",")} puntos</strong>
+            por no tener ${penalty.label}.
+          </div>`).join("")}
+      </div>`
+    : "";
+  $("miniBriefingDetail").innerHTML=
+    `<div class="mini-briefing-difference">Diferencia de media: <strong>${diff.toFixed(1)}</strong></div>${penaltiesHtml}`;
   $("miniBriefingRule").innerHTML=`Vas a tener <strong>${myAttacks} ataques</strong> y necesitás <strong>${myAdvances} avance${myAdvances===1?"":"s"}</strong> para hacer gol.`;
   briefing.classList.remove("hidden");
 }
