@@ -2318,7 +2318,7 @@ const spectatorSessionId =
 
 const TABLE_NAME_STORAGE_KEY = "mercadoElite5_lastTableName";
 const OPEN_ROOM_MAX_AGE = 5 * 60 * 1000;
-const PLAYING_ROOM_MAX_INACTIVITY = 5 * 60 * 1000;
+const PLAYING_ROOM_MAX_INACTIVITY = 10 * 60 * 1000;
 const OPEN_ROOM_CLEANUP_INTERVAL = 15 * 1000;
 let autoMatchTimer = null;
 let teamIntroTimer = null;
@@ -3720,7 +3720,7 @@ async function deleteExpiredOpenRoom(code,roomData){
 
     /* Primero desaparece del lobby y después borramos el estado de juego.
        Esto aplica tanto a una mesa esperando rival como a una partida con
-       dos jugadores que quedó abandonada sin acciones durante 5 minutos. */
+       dos jugadores que quedó abandonada sin acciones durante 10 minutos. */
     await remove(openRef);
     await remove(ref(db,`games/${code}`));
   }catch(error){
@@ -4332,7 +4332,7 @@ async function tryResumeFromUrl(){
   }
 }
 
-function leaveRoom(clearUrl=true){
+function leaveRoom(clearUrl=true, closeActiveMatch=false){
   if(teamIntroTimer){
     clearTimeout(teamIntroTimer);
     teamIntroTimer=null;
@@ -4352,6 +4352,11 @@ function leaveRoom(clearUrl=true){
   const wasOpen=currentRoomIsOpen;
   const wasWaiting=gameState?.status==="waiting";
   const wasTeamA=myTeam==="A";
+  const wasActivePlayer=
+    !isSpectator &&
+    Boolean(myTeam) &&
+    Boolean(gameState?.playerAUid) &&
+    Boolean(gameState?.playerBUid);
 
   if(unsubscribeGame) unsubscribeGame();
   unsubscribeGame=null;
@@ -4364,7 +4369,14 @@ function leaveRoom(clearUrl=true){
   }
   if($("spectatorToast")) $("spectatorToast").classList.remove("show");
 
-  if(db && oldRoomCode && wasOpen && wasWaiting && wasTeamA){
+  if(db && oldRoomCode && closeActiveMatch && wasActivePlayer){
+    /* Esta eliminación solo se ejecuta al pulsar "Salir de la sala".
+       Salir como espectador no cierra la partida. */
+    Promise.all([
+      remove(ref(db,`openRooms/${oldRoomCode}`)),
+      remove(ref(db,`games/${oldRoomCode}`))
+    ]).catch(error=>console.warn("No se pudo cerrar la partida al salir:",error));
+  }else if(db && oldRoomCode && wasOpen && wasWaiting && wasTeamA){
     remove(ref(db,`openRooms/${oldRoomCode}`)).catch(error=>console.warn("No se pudo quitar la mesa abierta:",error));
   }
 
@@ -4403,7 +4415,7 @@ rootMiniButtons().forEach(button=>{
 });
 $("revengeButton").addEventListener("click",resetGame);
 $("miniBriefingButton")?.addEventListener("click",dismissMiniBriefing);
-$("leaveRoomButton").addEventListener("click",()=>leaveRoom(true));
+$("leaveRoomButton").addEventListener("click",()=>leaveRoom(true,true));
 
 async function boot(){
   if(!firebaseConfigured()){
