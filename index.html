@@ -1151,27 +1151,145 @@ header p{
 .mini-turn-title{font-size:15px;font-weight:900;}
 .mini-turn-text{margin-top:4px;color:#9fb0a6;font-size:11px;}
 .mini-event-flash{
+  --event-color:#ffffff;
+  --event-glow:255,255,255;
   position:absolute;
   left:50%;top:50%;
   z-index:20;
-  min-width:230px;
-  padding:19px 22px;
+  min-width:250px;
+  padding:21px 24px;
   transform:translate(-50%,-50%);
   border-radius:18px;
-  background:rgba(2,8,5,.90);
-  border:1px solid rgba(255,255,255,.20);
+  background:rgba(2,8,5,.92);
+  border:2px solid var(--event-color);
+  box-shadow:0 0 28px rgba(var(--event-glow),.52);
   color:white;
   font-size:29px;
   font-weight:900;
+  text-shadow:0 2px 12px rgba(0,0,0,.55);
   opacity:0;
   pointer-events:none;
 }
-.mini-event-flash.show{animation:miniEventFlash 1.1s ease forwards;}
+.mini-event-flash.team-a,.mini-fx-burst.team-a{
+  --event-color:#63b7ff;
+  --event-glow:99,183,255;
+}
+.mini-event-flash.team-b,.mini-fx-burst.team-b{
+  --event-color:#ff7182;
+  --event-glow:255,113,130;
+}
+.mini-event-flash.event-goal.show{animation:miniGoalFlash 1.7s ease forwards;}
+.mini-event-flash.event-recovery.show{animation:miniRecoveryFlash 1.3s ease forwards;}
+.mini-event-flash.event-advance.show{animation:miniEventFlash 1.05s ease forwards;}
+.mini-fx-burst{
+  --event-color:#ffffff;
+  --event-glow:255,255,255;
+  position:absolute;
+  z-index:16;
+  width:0;
+  height:0;
+  pointer-events:none;
+}
+.mini-fx-burst span{
+  position:absolute;
+  left:-5px;
+  top:-5px;
+  width:10px;
+  height:10px;
+  border-radius:3px;
+  background:var(--event-color);
+  box-shadow:0 0 9px rgba(var(--event-glow),.8);
+  opacity:0;
+}
+.mini-fx-burst.goal.show span{animation:miniParticleBlast 1.25s ease-out forwards;}
+.mini-fx-burst.recovery.show:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:24px;
+  height:24px;
+  border:4px solid var(--event-color);
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(.2);
+  animation:miniRecoveryRing 1.15s ease-out forwards;
+}
+.mini-fx-burst span:nth-child(1){--x:-82px;--y:-74px;}
+.mini-fx-burst span:nth-child(2){--x:-43px;--y:-98px;}
+.mini-fx-burst span:nth-child(3){--x:0px;--y:-108px;}
+.mini-fx-burst span:nth-child(4){--x:46px;--y:-94px;}
+.mini-fx-burst span:nth-child(5){--x:84px;--y:-65px;}
+.mini-fx-burst span:nth-child(6){--x:96px;--y:-14px;}
+.mini-fx-burst span:nth-child(7){--x:76px;--y:38px;}
+.mini-fx-burst span:nth-child(8){--x:37px;--y:66px;}
+.mini-fx-burst span:nth-child(9){--x:-8px;--y:76px;}
+.mini-fx-burst span:nth-child(10){--x:-49px;--y:61px;}
+.mini-fx-burst span:nth-child(11){--x:-83px;--y:34px;}
+.mini-fx-burst span:nth-child(12){--x:-98px;--y:-18px;}
+.mini-pitch.event-goal{animation:miniGoalPitch 1.45s ease;}
+.mini-pitch.event-recovery{animation:miniRecoveryPitch 1.05s ease;}
+.mini-goal.goal-hit{animation:miniGoalNet 1.25s ease;}
+.mini-ball.recovery-rebound{animation:miniBallRebound .75s ease;}
+.mini-defender-mark.recovery-hit{animation:miniDefenderImpact 1.05s ease;}
+.mini-match-score .score-pop{display:inline-block;animation:miniScorePop 1.05s ease;}
+@keyframes miniGoalFlash{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(-3deg);}
+  14%{opacity:1;transform:translate(-50%,-50%) scale(1.14) rotate(2deg);}
+  28%,70%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-58%) scale(.94);}
+}
+@keyframes miniRecoveryFlash{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.65);}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.09);}
+  32%,68%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.94);}
+}
 @keyframes miniEventFlash{
   0%{opacity:0;transform:translate(-50%,-50%) scale(.72);}
-  18%{opacity:1;transform:translate(-50%,-50%) scale(1.07);}
-  68%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  18%,68%{opacity:1;transform:translate(-50%,-50%) scale(1);}
   100%{opacity:0;transform:translate(-50%,-50%) scale(.96);}
+}
+@keyframes miniParticleBlast{
+  0%{opacity:1;transform:translate(0,0) rotate(0) scale(.5);}
+  65%{opacity:1;}
+  100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(270deg) scale(1);}
+}
+@keyframes miniRecoveryRing{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(.2);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(6);}
+}
+@keyframes miniGoalPitch{
+  0%,100%{transform:translateX(0);}
+  12%{transform:translateX(-7px);}
+  24%{transform:translateX(7px);}
+  36%{transform:translateX(-4px);}
+  48%{transform:translateX(4px);}
+}
+@keyframes miniRecoveryPitch{
+  0%,100%{filter:brightness(1);}
+  20%{filter:brightness(1.7);}
+  45%{filter:brightness(.82);}
+}
+@keyframes miniGoalNet{
+  0%,100%{transform:translateX(-50%) scale(1);}
+  22%{transform:translateX(-50%) scale(1.22,.72);}
+  42%{transform:translateX(-50%) scale(.92,1.15);}
+  64%{transform:translateX(-50%) scale(1.06,.94);}
+}
+@keyframes miniBallRebound{
+  0%{transform:translateX(-50%) scale(1);}
+  35%{transform:translateX(-50%) translateY(-16px) scale(1.3) rotate(35deg);}
+  100%{transform:translateX(-50%) translateY(25px) scale(.88) rotate(-25deg);}
+}
+@keyframes miniDefenderImpact{
+  0%{transform:translateX(-50%) scale(.5);filter:brightness(2);}
+  28%{transform:translateX(-50%) scale(1.45);}
+  55%,100%{transform:translateX(-50%) scale(1);}
+}
+@keyframes miniScorePop{
+  0%,100%{transform:scale(1);}
+  25%{transform:scale(1.75);color:#fff;text-shadow:0 0 20px var(--event-color,#ffd45c);}
+  55%{transform:scale(.92);}
 }
 @media(max-width:500px){
   .mini-pitch{height:360px;}
@@ -2004,6 +2122,11 @@ position: fixed;
       <div id="miniBall" class="mini-ball">⚽</div>
       <div id="miniDefenderMark" class="mini-defender-mark hidden">🛡️</div>
       <div id="miniEventFlash" class="mini-event-flash"></div>
+      <div id="miniFxBurst" class="mini-fx-burst" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
       <div id="miniActionFlash" class="mini-action-flash">
         <strong id="miniActionFlashTitle"></strong>
         <span id="miniActionFlashText"></span>
@@ -3197,7 +3320,18 @@ function renderMiniMatch(){
   });
   const ball=$("miniBall");
   const mark=$("miniDefenderMark");
+  const pitch=$("miniPitch");
+  const goal=$("miniPitch")?.querySelector(".mini-goal");
+  const fx=$("miniFxBurst");
   mark.classList.add("hidden");
+
+  if(mini.phase!=="resolved"){
+    pitch?.classList.remove("event-goal","event-recovery");
+    goal?.classList.remove("goal-hit");
+    ball.classList.remove("recovery-rebound");
+    mark.classList.remove("recovery-hit");
+    fx?.classList.remove("show","goal","recovery","team-a","team-b");
+  }
 
   let displayLane=mini.currentLane||"center";
   let displayProgress=mini.progress||0;
@@ -3264,18 +3398,54 @@ function renderMiniMatch(){
     if(lastMiniFlashId!==res.id){
       lastMiniFlashId=res.id;
       const flash=$("miniEventFlash");
-      flash.textContent=res.type==="goal"?"⚽ GOL":res.type==="recovery"?"💥 RECUPERACIÓN":"🏃 AVANZA";
-      flash.classList.remove("show");
+      const eventTeam=res.type==="recovery"?defender:attacker;
+      const teamClass=eventTeam==="A"?"team-a":"team-b";
+      const eventClass=res.type==="goal"?"event-goal":res.type==="recovery"?"event-recovery":"event-advance";
+
+      flash.textContent=res.type==="goal"
+        ?`⚽ ¡GOL DEL ${teamName(attacker)}!`
+        :res.type==="recovery"
+          ?`🛡️ ¡RECUPERA EL ${teamName(defender)}!`
+          :"🏃 ¡AVANZA!";
+      flash.className=`mini-event-flash ${eventClass} ${teamClass}`;
       void flash.offsetWidth;
       flash.classList.add("show");
+
+      if(res.type==="goal"){
+        pitch?.classList.add("event-goal");
+        goal?.classList.add("goal-hit");
+        const score=$(`miniScore${attacker}`);
+        if(score){
+          score.classList.remove("score-pop");
+          void score.offsetWidth;
+          score.classList.add("score-pop");
+        }
+      }else if(res.type==="recovery"){
+        pitch?.classList.add("event-recovery");
+        ball.classList.add("recovery-rebound");
+        mark.classList.add("recovery-hit");
+      }
+
+      if(fx && res.type!=="advance"){
+        fx.style.left=miniLaneX(res.attackLane)+'%';
+        fx.style.bottom=(100-miniProgressY(displayProgress,needed))+'%';
+        fx.className=`mini-fx-burst ${res.type} ${teamClass}`;
+        void fx.offsetWidth;
+        fx.classList.add("show");
+      }
+
+      if(navigator.vibrate){
+        navigator.vibrate(res.type==="goal"?[90,45,140]:res.type==="recovery"?[70,35,70]:35);
+      }
     }
 
     if(!isSpectator){
       if(miniResolutionTimer) clearTimeout(miniResolutionTimer);
+      const resolutionDelay=res.type==="goal"?1800:res.type==="recovery"?1400:1100;
       miniResolutionTimer=setTimeout(()=>{
         miniResolutionTimer=null;
         advanceMiniAfterResolution(res.id);
-      },1150);
+      },resolutionDelay);
     }
   }
 
